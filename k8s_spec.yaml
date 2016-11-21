@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: DaemonSet
+metadata:
+  name: miru-syslog
+spec:
+  containers:
+    - image: docker.phx1.jivehosted.com/mako/miru-syslog:7d25ac56154d1c7319c6a0743994be2b152f91f6
+      name: miru-syslog
+      command:
+        - /go/bin/miru-syslog
+      env:
+      - name: MAKO_STATSD_HOST
+        value: 127.0.0.1
+      - name: MAKO_STATSD_PORT
+        value: "8125"
+      - name: MAKO_SERVICE_ID
+        value: miru-syslog
+      - name: MAKO_ENVIRONMENT
+        value: mako-dev-test
+      - name: MAKO_PIPELINE
+        value: main
+      - name: MAKO_VERSION
+        value: 15713b5b733e11069f68c2b78cbe5ad3e4a40abc
+      livenessProbe:
+        httpGet:
+          path: /ping
+          port: 8081

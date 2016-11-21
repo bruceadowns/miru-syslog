@@ -1,0 +1,21 @@
+{
+	"ImportPath": "github.com/bruceadowns/miru-syslog",
+	"GoVersion": "go1.7",
+	"GodepVersion": "v70",
+	"Deps": [
+		{
+			"ImportPath": "github.com/DataDog/datadog-go/statsd",
+			"Rev": "cc2f4770f4d61871e19bfee967bc767fe730b0d9"
+		},
+		{
+			"ImportPath": "github.com/gorilla/context",
+			"Comment": "v1.1-2-ga8d44e7",
+			"Rev": "a8d44e7d8e4d532b6a27a02dd82abb31cc1b01bd"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Comment": "v1.1-7-g9c19ed5",
+			"Rev": "9c19ed558d5df4da88e2ade9c8940d742aef0e7e"
+		}
+	]
+}
