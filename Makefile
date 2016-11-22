@@ -35,4 +35,4 @@ docker:
 
 run:
 	@echo run docker image
-	@docker run -it --rm -p 514:514 -p 8081:8081 --env-file mako_env.sh docker.phx1.jivehosted.com/miru/miru-syslog:latest
+	@docker run -it --rm -p 514:514 -p 514:514/udp -p 8081:8081 --env-file mako_env.sh docker.phx1.jivehosted.com/miru/miru-syslog:latest

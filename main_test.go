@@ -7,14 +7,16 @@ import (
 	"testing"
 )
 
+const dockerAddr = "192.168.99.100:514"
+
 func TestMain(t *testing.T) {
 	t.Log("Testing main")
 }
 
 func TestTcpClient(t *testing.T) {
-	fmt.Printf("Connect to tcp server at %s\n", listenAddr)
+	fmt.Printf("Connect to tcp server at %s\n", dockerAddr)
 
-	conn, err := net.Dial("tcp", listenAddr)
+	conn, err := net.Dial("tcp", dockerAddr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -26,9 +28,9 @@ func TestTcpClient(t *testing.T) {
 }
 
 func TestUdpClient(t *testing.T) {
-	fmt.Printf("Connect to udp server at %s\n", listenAddr)
+	fmt.Printf("Connect to udp server at %s\n", dockerAddr)
 
-	conn, err := net.Dial("udp", listenAddr)
+	conn, err := net.Dial("udp", dockerAddr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -47,8 +49,8 @@ func handleConnection(c net.Conn) {
 }
 
 func TestTcpServer(t *testing.T) {
-	fmt.Printf("Listen for tcp traffic on %s\n", listenAddr)
-	l, err := net.Listen("tcp", listenAddr)
+	fmt.Printf("Listen for tcp traffic on %s\n", dockerAddr)
+	l, err := net.Listen("tcp", dockerAddr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,8 +67,8 @@ func TestTcpServer(t *testing.T) {
 }
 
 func TestUdpServer(t *testing.T) {
-	fmt.Printf("Listen for udp traffic on %s\n", listenAddr)
-	pc, err := net.ListenPacket("udp", listenAddr)
+	fmt.Printf("Listen for udp traffic on %s\n", dockerAddr)
+	pc, err := net.ListenPacket("udp", dockerAddr)
 	if err != nil {
 		log.Fatal(err)
 	}
