@@ -2,11 +2,9 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/gorilla/mux"
 
@@ -19,8 +17,6 @@ type miruEnv struct {
 }
 
 var activeMiruEnv miruEnv
-
-var timeStart time.Time
 
 func adminRootHandler(w http.ResponseWriter, r *http.Request) {
 	mako.LogInfo(fmt.Sprintf("%v", r))
@@ -44,15 +40,8 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Hello Metrics"))
 }
 
-func serviceHandler(w http.ResponseWriter, r *http.Request) {
-	mako.LogInfo(fmt.Sprintf("%v", r))
-	mako.DataDogClient.Count("serviceHandler", 1, nil, 0)
-	mako.DataDogClient.SimpleEvent("serviceHandler", "Service Handler was called")
-	w.Write([]byte("Hello Root"))
-}
-
 func udpMessagePump() error {
-	log.Printf("Listen for udp traffic on %s", activeMiruEnv.miruAddress)
+	mako.LogInfo(fmt.Sprintf("Listen for udp traffic on %s", activeMiruEnv.miruAddress))
 
 	pc, err := net.ListenPacket("udp", activeMiruEnv.miruAddress)
 	if err != nil {
@@ -60,34 +49,44 @@ func udpMessagePump() error {
 	}
 	defer pc.Close()
 
-	log.Printf("Handle UDP connections")
+	mako.LogInfo("Handle UDP connections")
 	for {
 		buffer := make([]byte, 1024)
-		pc.ReadFrom(buffer)
-		log.Printf("Read udp buffer: %s", buffer)
-
-		err := miru.PostManyEvents()
+		n, addr, err := pc.ReadFrom(buffer)
 		if err != nil {
-			log.Print(err)
+			mako.LogError(err.Error())
+			return err
+		}
+
+		mako.LogInfo(fmt.Sprintf("Read udp buffer from %s: %s", addr, buffer[:n]))
+
+		err = miru.PostManyEvents()
+		if err != nil {
+			mako.LogInfo(err.Error())
 		}
 	}
 }
 
 func handleTCPConnection(c net.Conn) {
-	log.Printf("New TCP connection")
+	mako.LogInfo("New TCP connection")
 
 	buffer := make([]byte, 1024)
-	c.Read(buffer)
-	log.Printf("Read tcp buffer: %s", buffer)
-
-	err := miru.PostOneEvent()
+	n, err := c.Read(buffer)
 	if err != nil {
-		log.Print(err)
+		mako.LogError(err.Error())
+		return
+	}
+
+	mako.LogInfo(fmt.Sprintf("Read tcp buffer: %s", buffer[:n]))
+
+	err = miru.PostOneEvent()
+	if err != nil {
+		mako.LogInfo(err.Error())
 	}
 }
 
 func tcpMessagePump() error {
-	log.Printf("Listen for tcp traffic on %s", activeMiruEnv.miruAddress)
+	mako.LogInfo(fmt.Sprintf("Listen for tcp traffic on %s", activeMiruEnv.miruAddress))
 
 	l, err := net.Listen("tcp", activeMiruEnv.miruAddress)
 	if err != nil {
@@ -108,15 +107,13 @@ func tcpMessagePump() error {
 func init() {
 	activeMiruEnv.miruAddress = os.Getenv("MIRU_STUMPTOWN_HOST_PORT")
 	if activeMiruEnv.miruAddress == "" {
-		log.Print("MIRU_STUMPTOWN_HOST_PORT not present in environment. Default to :514.")
+		mako.LogInfo("MIRU_STUMPTOWN_HOST_PORT not present in environment. Default to :514.")
 		activeMiruEnv.miruAddress = ":514"
 	}
 }
 
 func main() {
-	timeStart = time.Now()
-
-	log.Print("Start admin handler")
+	mako.LogInfo("Start admin handler")
 	go func() {
 		admin := mux.NewRouter()
 		admin.HandleFunc("/", adminRootHandler)
@@ -128,12 +125,12 @@ func main() {
 
 	var err error
 
-	log.Print("Start udp handler")
+	mako.LogInfo("Start udp handler")
 	go udpMessagePump()
 
-	log.Print("Start tcp pump")
+	mako.LogInfo("Start tcp pump")
 	err = tcpMessagePump()
 	if err != nil {
-		log.Fatal(err)
+		mako.LogError(err.Error())
 	}
 }

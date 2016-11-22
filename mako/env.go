@@ -5,8 +5,8 @@ import (
 	"os"
 )
 
-// MakoEnv tracks mako related environment variables
-type MakoEnv struct {
+// Env tracks mako related environment variables
+type Env struct {
 	serviceID   string
 	environment string
 	pipeline    string
@@ -15,22 +15,22 @@ type MakoEnv struct {
 	statsdPort  int
 }
 
-// ActiveMakoEnv holds the active environment variables
-var ActiveMakoEnv MakoEnv
+// ActiveEnv holds the active environment variables
+var ActiveEnv Env
 
 func hideEnvInit() {
-	ActiveMakoEnv.environment = os.Getenv("MAKO_ENVIRONMENT")
-	if ActiveMakoEnv.environment == "" {
+	ActiveEnv.environment = os.Getenv("MAKO_ENVIRONMENT")
+	if ActiveEnv.environment == "" {
 		log.Fatalf("MAKO_ENVIRONMENT not present in mako environment")
 	}
 
-	ActiveMakoEnv.pipeline = os.Getenv("MAKO_PIPELINE")
-	if ActiveMakoEnv.pipeline == "" {
+	ActiveEnv.pipeline = os.Getenv("MAKO_PIPELINE")
+	if ActiveEnv.pipeline == "" {
 		log.Fatalf("MAKO_PIPELINE not present in mako environment")
 	}
 
-	ActiveMakoEnv.version = os.Getenv("MAKO_VERSION")
-	if ActiveMakoEnv.version == "" {
+	ActiveEnv.version = os.Getenv("MAKO_VERSION")
+	if ActiveEnv.version == "" {
 		log.Fatalf("MAKO_VERSION not present in mako environment")
 	}
 }

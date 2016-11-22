@@ -11,7 +11,7 @@ spec:
         name: miru-syslog
     spec:
       containers:
-        - image: docker.phx1.jivehosted.com/mako/miru-syslog:7d25ac56154d1c7319c6a0743994be2b152f91f6
+        - image: docker.phx1.jivehosted.com/mako/miru-syslog:latest
           name: miru-syslog
           command:
             - /go/bin/miru-syslog
@@ -30,7 +30,7 @@ spec:
           - name: MAKO_SERVICE_ID
             value: miru-syslog
           - name: MAKO_ENVIRONMENT
-            value: mako-dev-test
+            value: ms-integ
           - name: MAKO_PIPELINE
             value: main
           - name: MAKO_VERSION

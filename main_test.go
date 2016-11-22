@@ -8,10 +8,6 @@ import (
 	"testing"
 )
 
-func TestMain(t *testing.T) {
-	t.Log("Testing main")
-}
-
 func TestTcpClient(t *testing.T) {
 	dockerAddr := os.Getenv("MIRU_STUMPTOWN_HOST_PORT")
 	if len(dockerAddr) == 0 {

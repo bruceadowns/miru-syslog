@@ -1,8 +1,11 @@
 package miru
 
 const (
-	levelInfo = "INFO"
-	levelWarn = "WARN"
+	// LevelInfo stringizes info log level
+	LevelInfo = "INFO"
+
+	// LevelWarn stringizes warn log level
+	LevelWarn = "WARN"
 )
 
 // LogEvent holds the stumptown event

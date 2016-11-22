@@ -11,14 +11,14 @@ import (
 
 // PostOneEvent demonstrates sending a single log event to stumptown
 func PostOneEvent() error {
-	events := []LogEvent{LogEvent{
+	events := []LogEvent{{
 		DataCenter: "bad-dc",
 		Cluster:    "bad-cluster",
 		Host:       "bad-host",
 		Service:    "bad-service",
 		Instance:   "bad-instance",
 		Version:    "1.0",
-		Level:      levelInfo,
+		Level:      LevelInfo,
 		Message:    "My info message",
 	}}
 
@@ -56,7 +56,7 @@ func PostManyEvents() error {
 			Service:    "bad-service",
 			Instance:   "bad-instance",
 			Version:    "1.0",
-			Level:      levelWarn,
+			Level:      LevelWarn,
 			Message:    fmt.Sprintf("My %d message", i),
 		}
 
