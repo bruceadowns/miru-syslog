@@ -24,14 +24,13 @@ It is written in golang, housed in a docker container, deployed via mako, into a
 
 ### Miru
 
-* miru-stumptown host address
-* miru-stumptown host port
-* miru-stumptown intake url
+* miru-stumptown host addr:port
+* miru-stumptown intake url - default to /miru/stumptown/intake
 
 ### Listener
 
-* tcp listen port
-* udp listen port
+* tcp listen port - default to :514
+* udp listen port - default to empty/off
 * queue size
 * batch size
 

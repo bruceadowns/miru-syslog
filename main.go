@@ -5,15 +5,20 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gorilla/mux"
 
-	"github.com/bruceadowns/miru-syslog/mako"
+"stash.jiveland.com/~bruce.downs/miru-syslog/mako"
 	"github.com/bruceadowns/miru-syslog/miru"
 )
 
-const listenAddr = ":514"
+type miruEnv struct {
+	miruAddress string
+}
+
+var activeMiruEnv miruEnv
 
 var timeStart time.Time
 
@@ -47,9 +52,9 @@ func serviceHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func udpMessagePump() error {
-	log.Printf("Listen for udp traffic on %s", listenAddr)
+	log.Printf("Listen for udp traffic on %s", activeMiruEnv.miruAddress)
 
-	pc, err := net.ListenPacket("udp", listenAddr)
+	pc, err := net.ListenPacket("udp", activeMiruEnv.miruAddress)
 	if err != nil {
 		return err
 	}
@@ -82,9 +87,9 @@ func handleTCPConnection(c net.Conn) {
 }
 
 func tcpMessagePump() error {
-	log.Printf("Listen for tcp traffic on %s", listenAddr)
+	log.Printf("Listen for tcp traffic on %s", activeMiruEnv.miruAddress)
 
-	l, err := net.Listen("tcp", listenAddr)
+	l, err := net.Listen("tcp", activeMiruEnv.miruAddress)
 	if err != nil {
 		return err
 	}
@@ -97,6 +102,14 @@ func tcpMessagePump() error {
 		}
 
 		go handleTCPConnection(c)
+	}
+}
+
+func init() {
+	activeMiruEnv.miruAddress = os.Getenv("MIRU_STUMPTOWN_HOST_PORT")
+	if activeMiruEnv.miruAddress == "" {
+		log.Print("MIRU_STUMPTOWN_HOST_PORT not present in environment. Default to :514.")
+		activeMiruEnv.miruAddress = ":514"
 	}
 }
 
