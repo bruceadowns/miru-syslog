@@ -3,6 +3,6 @@ MAINTAINER bruce.downs@jivesoftware.com
 
 RUN go get github.com/bruceadowns/miru-syslog
 
-EXPOSE 514 8081
+EXPOSE 514
 
 ENTRYPOINT /go/bin/miru-syslog

@@ -10,7 +10,7 @@ import (
 )
 
 // PostOneEvent demonstrates sending a single log event to stumptown
-func PostOneEvent() error {
+func PostOneEvent(addr string) error {
 	events := []LogEvent{{
 		DataCenter: "bad-dc",
 		Cluster:    "bad-cluster",
@@ -28,7 +28,7 @@ func PostOneEvent() error {
 	}
 	log.Print(buf)
 
-	resp, err := http.Post("http://10.126.5.155:10004/miru/stumptown/intake", "application/json", buf)
+	resp, err := http.Post(fmt.Sprintf("http://%s/miru/stumptown/intake", addr), "application/json", buf)
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func PostOneEvent() error {
 }
 
 // PostManyEvents demonstrates sending more than one log event to stumptown
-func PostManyEvents() error {
+func PostManyEvents(addr string) error {
 	const SIZE = 10
 	events := make([]LogEvent, SIZE)
 
@@ -70,7 +70,7 @@ func PostManyEvents() error {
 	}
 	log.Print(buf)
 
-	resp, err := http.Post("http://10.126.5.155:10004/miru/stumptown/intake", "application/json", buf)
+	resp, err := http.Post(fmt.Sprintf("http://%s/miru/stumptown/intake", addr), "application/json", buf)
 	if err != nil {
 		return err
 	}

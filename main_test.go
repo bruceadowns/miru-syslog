@@ -9,9 +9,9 @@ import (
 )
 
 func TestTcpClient(t *testing.T) {
-	dockerAddr := os.Getenv("MIRU_STUMPTOWN_HOST_PORT")
+	dockerAddr := os.Getenv("MIRU_SYSLOG_HOST_PORT")
 	if len(dockerAddr) == 0 {
-		t.Skip("MIRU_STUMPTOWN_HOST_PORT not found.")
+		t.Skip("MIRU_SYSLOG_HOST_PORT not found.")
 	}
 
 	fmt.Printf("Connect to tcp server at %s\n", dockerAddr)
@@ -28,9 +28,9 @@ func TestTcpClient(t *testing.T) {
 }
 
 func TestUdpClient(t *testing.T) {
-	dockerAddr := os.Getenv("MIRU_STUMPTOWN_HOST_PORT")
+	dockerAddr := os.Getenv("MIRU_SYSLOG_HOST_PORT")
 	if len(dockerAddr) == 0 {
-		t.Skip("MIRU_STUMPTOWN_HOST_PORT not found.")
+		t.Skip("MIRU_SYSLOG_HOST_PORT not found.")
 	}
 
 	fmt.Printf("Connect to udp server at %s\n", dockerAddr)
@@ -54,9 +54,9 @@ func handleConnection(c net.Conn) {
 }
 
 func TestTcpServer(t *testing.T) {
-	dockerAddr := os.Getenv("MIRU_STUMPTOWN_HOST_PORT")
+	dockerAddr := os.Getenv("MIRU_SYSLOG_HOST_PORT")
 	if len(dockerAddr) == 0 {
-		t.Skip("MIRU_STUMPTOWN_HOST_PORT not found.")
+		t.Skip("MIRU_SYSLOG_HOST_PORT not found.")
 	}
 
 	fmt.Printf("Listen for tcp traffic on %s\n", dockerAddr)
@@ -77,9 +77,9 @@ func TestTcpServer(t *testing.T) {
 }
 
 func TestUdpServer(t *testing.T) {
-	dockerAddr := os.Getenv("MIRU_STUMPTOWN_HOST_PORT")
+	dockerAddr := os.Getenv("MIRU_SYSLOG_HOST_PORT")
 	if len(dockerAddr) == 0 {
-		t.Skip("MIRU_STUMPTOWN_HOST_PORT not found.")
+		t.Skip("MIRU_SYSLOG_HOST_PORT not found.")
 	}
 
 	fmt.Printf("Listen for udp traffic on %s\n", dockerAddr)

@@ -18,26 +18,17 @@ spec:
           ports:
             - containerPort: 514
               hostPort: 514
-              name: syslogport
-            - containerPort: 8081
-              hostPort: 8081
-              name: adminport
+              name: syslogtcpport
+              protocol: TCP
+            - containerPort: 514
+              hostPort: 514
+              name: syslogudpport
+              protocol: UDP
           env:
-          - name: MAKO_STATSD_HOST
-            value: 127.0.0.1
-          - name: MAKO_STATSD_PORT
-            value: "8125"
-          - name: MAKO_SERVICE_ID
-            value: miru-syslog
-          - name: MAKO_ENVIRONMENT
-            value: ms-integ
-          - name: MAKO_PIPELINE
-            value: main
-          - name: MAKO_VERSION
-            value: 15713b5b733e11069f68c2b78cbe5ad3e4a40abc
-          - name: MIRU_STUMPTOWN_HOST_PORT
+          - name: MIRU_SYSLOG_HOST_PORT
             value: :514
+          - name: MIRU_STUMPTOWN_HOST_PORT
+            value: 10.126.5.155:10004
           livenessProbe:
-            httpGet:
-              path: /ping
-              port: 8081
+            tcpSocket:
+              port: 514

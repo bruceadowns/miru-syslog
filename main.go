@@ -1,94 +1,69 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"net"
-	"net/http"
 	"os"
 
-	"github.com/gorilla/mux"
-
-	"github.com/bruceadowns/miru-syslog/mako"
 	"github.com/bruceadowns/miru-syslog/miru"
 )
 
 type miruEnv struct {
-	miruAddress string
+	listenAddress    string
+	stumptownAddress string
 }
 
 var activeMiruEnv miruEnv
 
-func adminRootHandler(w http.ResponseWriter, r *http.Request) {
-	mako.LogInfo(fmt.Sprintf("%v", r))
-	w.Write([]byte("Hello Admin Root"))
-}
-
-func pingHandler(w http.ResponseWriter, r *http.Request) {
-	mako.LogInfo(fmt.Sprintf("%v", r))
-	mako.DataDogClient.Count("ping", 1, nil, 0)
-
-	w.Write([]byte("pong"))
-}
-
-func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
-	mako.LogInfo(fmt.Sprintf("%v", r))
-	w.Write([]byte("Hello Health Check"))
-}
-
-func metricsHandler(w http.ResponseWriter, r *http.Request) {
-	mako.LogInfo(fmt.Sprintf("%v", r))
-	w.Write([]byte("Hello Metrics"))
-}
-
 func udpMessagePump() error {
-	mako.LogInfo(fmt.Sprintf("Listen for udp traffic on %s", activeMiruEnv.miruAddress))
+	log.Printf("Listen for udp traffic on %s", activeMiruEnv.listenAddress)
 
-	pc, err := net.ListenPacket("udp", activeMiruEnv.miruAddress)
+	pc, err := net.ListenPacket("udp", activeMiruEnv.listenAddress)
 	if err != nil {
 		return err
 	}
 	defer pc.Close()
 
-	mako.LogInfo("Handle UDP connections")
+	log.Print("Handle UDP connections")
 	for {
 		buffer := make([]byte, 1024)
 		n, addr, err := pc.ReadFrom(buffer)
 		if err != nil {
-			mako.LogError(err.Error())
+			log.Print(err)
 			return err
 		}
 
-		mako.LogInfo(fmt.Sprintf("Read udp buffer from %s: %s", addr, buffer[:n]))
+		log.Printf("Read udp buffer from %s: %s", addr, buffer[:n])
 
-		err = miru.PostManyEvents()
+		err = miru.PostManyEvents(activeMiruEnv.stumptownAddress)
 		if err != nil {
-			mako.LogInfo(err.Error())
+			log.Print(err)
 		}
 	}
 }
 
 func handleTCPConnection(c net.Conn) {
-	mako.LogInfo("New TCP connection")
+	log.Print("New TCP connection")
 
 	buffer := make([]byte, 1024)
 	n, err := c.Read(buffer)
 	if err != nil {
-		mako.LogError(err.Error())
+		log.Print(err)
 		return
 	}
 
-	mako.LogInfo(fmt.Sprintf("Read tcp buffer: %s", buffer[:n]))
+	log.Printf("Read tcp buffer: %s", buffer[:n])
 
-	err = miru.PostOneEvent()
+	err = miru.PostOneEvent(activeMiruEnv.stumptownAddress)
 	if err != nil {
-		mako.LogInfo(err.Error())
+		log.Print(err)
 	}
 }
 
 func tcpMessagePump() error {
-	mako.LogInfo(fmt.Sprintf("Listen for tcp traffic on %s", activeMiruEnv.miruAddress))
+	log.Printf("Listen for tcp traffic on %s", activeMiruEnv.listenAddress)
 
-	l, err := net.Listen("tcp", activeMiruEnv.miruAddress)
+	l, err := net.Listen("tcp", activeMiruEnv.listenAddress)
 	if err != nil {
 		return err
 	}
@@ -105,32 +80,25 @@ func tcpMessagePump() error {
 }
 
 func init() {
-	activeMiruEnv.miruAddress = os.Getenv("MIRU_STUMPTOWN_HOST_PORT")
-	if activeMiruEnv.miruAddress == "" {
-		mako.LogInfo("MIRU_STUMPTOWN_HOST_PORT not present in environment. Default to :514.")
-		activeMiruEnv.miruAddress = ":514"
+	activeMiruEnv.listenAddress = os.Getenv("MIRU_SYSLOG_HOST_PORT")
+	if activeMiruEnv.listenAddress == "" {
+		log.Print("MIRU_SYSLOG_HOST_PORT not present in environment. Default to :514.")
+		activeMiruEnv.listenAddress = ":514"
+	}
+
+	activeMiruEnv.stumptownAddress = os.Getenv("MIRU_STUMPTOWN_HOST_PORT")
+	if activeMiruEnv.stumptownAddress == "" {
+		log.Print("MIRU_STUMPTOWN_HOST_PORT not present in environment.")
 	}
 }
 
 func main() {
-	mako.LogInfo("Start admin handler")
-	go func() {
-		admin := mux.NewRouter()
-		admin.HandleFunc("/", adminRootHandler)
-		admin.HandleFunc("/ping", pingHandler)
-		admin.HandleFunc("/healthcheck", healthCheckHandler)
-		admin.HandleFunc("/metrics", metricsHandler)
-		http.ListenAndServe(":8081", admin)
-	}()
-
-	var err error
-
-	mako.LogInfo("Start udp handler")
+	log.Print("Start udp handler")
 	go udpMessagePump()
 
-	mako.LogInfo("Start tcp pump")
-	err = tcpMessagePump()
+	log.Print("Start tcp pump")
+	err := tcpMessagePump()
 	if err != nil {
-		mako.LogError(err.Error())
+		log.Fatal(err)
 	}
 }
