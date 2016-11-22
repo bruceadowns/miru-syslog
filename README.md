@@ -34,21 +34,34 @@ It is written in golang, housed in a docker container, deployed as a DaemonSet i
 * hand off events to parse
 * forward set of MiruLogEvent objects via REST POST
 
-## DONE
+### DONE
 
 * create miru-syslog/sample-golang in minikube
 * IT in minikube
+
+## Test Notes
+
+```
+make docker
+make run
+
+export MIRU_STUMPTOWN_HOST_PORT=10.126.5.155:10004
+export MIRU_SYSLOG_HOST_PORT=`docker-machine ip`:514
+go test -v --run Test.*Client
+```
 
 ```
 minikube start
 minikube ip
 
-MIRU_STUMPTOWN_HOST_PORT=10.126.5.155:10004 MIRU_SYSLOG_HOST_PORT=`minikube ip`:514 go test -v --run TestTcpClient
-MIRU_STUMPTOWN_HOST_PORT=10.126.5.155:10004 MIRU_SYSLOG_HOST_PORT=`minikube ip`:514 go test -v --run TestUdpClient
-
 kubectl create -f k8s.yml
 kubectl get pod
 kubectl get daemonset
+
+export MIRU_STUMPTOWN_HOST_PORT=10.126.5.155:10004
+export MIRU_SYSLOG_HOST_PORT=`minikube ip`:514
+go test -v --run Test.*Client
+
 kubectl logs miru-syslog-xxxxx
 kubectl delete daemonset miru-syslog
 ```
