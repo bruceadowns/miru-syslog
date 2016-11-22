@@ -13,7 +13,7 @@ import (
 	"github.com/bruceadowns/miru-syslog/miru"
 )
 
-const addr = "127.0.0.1:8514"
+const listenAddr = ":514"
 
 var timeStart time.Time
 
@@ -47,9 +47,9 @@ func serviceHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func udpMessagePump() error {
-	log.Printf("Listen for udp traffic on %s", addr)
+	log.Printf("Listen for udp traffic on %s", listenAddr)
 
-	pc, err := net.ListenPacket("udp", addr)
+	pc, err := net.ListenPacket("udp", listenAddr)
 	if err != nil {
 		return err
 	}
@@ -82,9 +82,9 @@ func handleTCPConnection(c net.Conn) {
 }
 
 func tcpMessagePump() error {
-	log.Printf("Listen for tcp traffic on %s", addr)
+	log.Printf("Listen for tcp traffic on %s", listenAddr)
 
-	l, err := net.Listen("tcp", addr)
+	l, err := net.Listen("tcp", listenAddr)
 	if err != nil {
 		return err
 	}

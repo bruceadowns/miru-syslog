@@ -12,9 +12,9 @@ func TestMain(t *testing.T) {
 }
 
 func TestTcpClient(t *testing.T) {
-	fmt.Printf("Connect to tcp server at %s\n", addr)
+	fmt.Printf("Connect to tcp server at %s\n", listenAddr)
 
-	conn, err := net.Dial("tcp", addr)
+	conn, err := net.Dial("tcp", listenAddr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -26,9 +26,9 @@ func TestTcpClient(t *testing.T) {
 }
 
 func TestUdpClient(t *testing.T) {
-	fmt.Printf("Connect to udp server at %s\n", addr)
+	fmt.Printf("Connect to udp server at %s\n", listenAddr)
 
-	conn, err := net.Dial("udp", addr)
+	conn, err := net.Dial("udp", listenAddr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -47,8 +47,8 @@ func handleConnection(c net.Conn) {
 }
 
 func TestTcpServer(t *testing.T) {
-	fmt.Printf("Listen for tcp traffic on %s\n", addr)
-	l, err := net.Listen("tcp", addr)
+	fmt.Printf("Listen for tcp traffic on %s\n", listenAddr)
+	l, err := net.Listen("tcp", listenAddr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,8 +65,8 @@ func TestTcpServer(t *testing.T) {
 }
 
 func TestUdpServer(t *testing.T) {
-	fmt.Printf("Listen for udp traffic on %s\n", addr)
-	pc, err := net.ListenPacket("udp", addr)
+	fmt.Printf("Listen for udp traffic on %s\n", listenAddr)
+	pc, err := net.ListenPacket("udp", listenAddr)
 	if err != nil {
 		log.Fatal(err)
 	}

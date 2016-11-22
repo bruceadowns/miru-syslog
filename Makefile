@@ -19,7 +19,7 @@ test:
 clean:
 	@-rm -v miru-syslog 2>/dev/null
 	@-rm -v $(GOPATH)/bin/miru-syslog 2>/dev/null
-	@-docker rmi docker.phx1.jivehosted.com/mako/miru-syslog 2>/dev/null
+	@-docker rmi docker.phx1.jivehosted.com/miru/miru-syslog 2>/dev/null
 
 build:
 	@echo build service
