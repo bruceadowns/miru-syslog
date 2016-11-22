@@ -10,7 +10,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-"stash.jiveland.com/~bruce.downs/miru-syslog/mako"
+	"github.com/bruceadowns/miru-syslog/mako"
 	"github.com/bruceadowns/miru-syslog/miru"
 )
 
@@ -23,31 +23,31 @@ var activeMiruEnv miruEnv
 var timeStart time.Time
 
 func adminRootHandler(w http.ResponseWriter, r *http.Request) {
-	common.LogInfo(fmt.Sprintf("%v", r))
+	mako.LogInfo(fmt.Sprintf("%v", r))
 	w.Write([]byte("Hello Admin Root"))
 }
 
 func pingHandler(w http.ResponseWriter, r *http.Request) {
-	common.LogInfo(fmt.Sprintf("%v", r))
-	common.DataDogClient.Count("ping", 1, nil, 0)
+	mako.LogInfo(fmt.Sprintf("%v", r))
+	mako.DataDogClient.Count("ping", 1, nil, 0)
 
 	w.Write([]byte("pong"))
 }
 
 func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
-	common.LogInfo(fmt.Sprintf("%v", r))
+	mako.LogInfo(fmt.Sprintf("%v", r))
 	w.Write([]byte("Hello Health Check"))
 }
 
 func metricsHandler(w http.ResponseWriter, r *http.Request) {
-	common.LogInfo(fmt.Sprintf("%v", r))
+	mako.LogInfo(fmt.Sprintf("%v", r))
 	w.Write([]byte("Hello Metrics"))
 }
 
 func serviceHandler(w http.ResponseWriter, r *http.Request) {
-	common.LogInfo(fmt.Sprintf("%v", r))
-	common.DataDogClient.Count("serviceHandler", 1, nil, 0)
-	common.DataDogClient.SimpleEvent("serviceHandler", "Service Handler was called")
+	mako.LogInfo(fmt.Sprintf("%v", r))
+	mako.DataDogClient.Count("serviceHandler", 1, nil, 0)
+	mako.DataDogClient.SimpleEvent("serviceHandler", "Service Handler was called")
 	w.Write([]byte("Hello Root"))
 }
 

@@ -1,4 +1,4 @@
-package common
+package mako
 
 import (
 	"encoding/json"
@@ -21,10 +21,10 @@ type jsonLogEntry struct {
 func logPrint(message, level string) {
 	j, err := json.Marshal(&jsonLogEntry{
 		Timestamp:          time.Now().Format(time.RFC3339),
-		ServiceName:        activeMakoEnv.serviceID,
-		ServiceEnvironment: activeMakoEnv.environment,
-		ServicePipeline:    activeMakoEnv.pipeline,
-		ServiceVersion:     activeMakoEnv.version,
+		ServiceName:        ActiveMakoEnv.serviceID,
+		ServiceEnvironment: ActiveMakoEnv.environment,
+		ServicePipeline:    ActiveMakoEnv.pipeline,
+		ServiceVersion:     ActiveMakoEnv.version,
 		Message:            message,
 		Level:              level,
 	})
@@ -36,7 +36,7 @@ func logPrint(message, level string) {
 }
 
 // LogDebug logs a debug message to stdout as json
-func logDebug(message string) {
+func LogDebug(message string) {
 	logPrint(message, "DEBUG")
 }
 

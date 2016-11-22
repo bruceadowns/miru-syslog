@@ -11,7 +11,7 @@ import (
 
 // PostOneEvent demonstrates sending a single log event to stumptown
 func PostOneEvent() error {
-	events := []miruLogEvent{miruLogEvent{
+	events := []LogEvent{LogEvent{
 		DataCenter: "bad-dc",
 		Cluster:    "bad-cluster",
 		Host:       "bad-host",
@@ -46,10 +46,10 @@ func PostOneEvent() error {
 // PostManyEvents demonstrates sending more than one log event to stumptown
 func PostManyEvents() error {
 	const SIZE = 10
-	events := make([]miruLogEvent, SIZE)
+	events := make([]LogEvent, SIZE)
 
 	for i := 0; i < SIZE; i++ {
-		event := miruLogEvent{
+		event := LogEvent{
 			DataCenter: "bad-dc",
 			Cluster:    "bad-cluster",
 			Host:       "bad-host",

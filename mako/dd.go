@@ -1,4 +1,4 @@
-package common
+package mako
 
 import (
 	"fmt"
@@ -13,8 +13,8 @@ import (
 var DataDogClient *statsd.Client
 
 func hideDdInit() {
-	activeMakoEnv.statsdHost = os.Getenv("MAKO_STATSD_HOST")
-	if activeMakoEnv.statsdHost == "" {
+	ActiveMakoEnv.statsdHost = os.Getenv("MAKO_STATSD_HOST")
+	if ActiveMakoEnv.statsdHost == "" {
 		log.Fatalf("MAKO_STATSD_HOST not present in mako environment")
 	}
 
@@ -26,20 +26,20 @@ func hideDdInit() {
 	if err != nil {
 		log.Fatalf("Error occurred converting MAKO_STATSD_PORT: %s", sPort)
 	}
-	activeMakoEnv.statsdPort = iPort
+	ActiveMakoEnv.statsdPort = iPort
 
 	//telemetry to statsd_host:statsd_port
 	DataDogClient, err = statsd.New(
 		fmt.Sprintf("%s:%d",
-			activeMakoEnv.statsdHost, activeMakoEnv.statsdPort))
+			ActiveMakoEnv.statsdHost, ActiveMakoEnv.statsdPort))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	activeMakoEnv.serviceID = os.Getenv("MAKO_SERVICE_ID")
-	if activeMakoEnv.serviceID == "" {
+	ActiveMakoEnv.serviceID = os.Getenv("MAKO_SERVICE_ID")
+	if ActiveMakoEnv.serviceID == "" {
 		log.Fatalf("MAKO_SERVICE_ID not present in mako environment")
 	}
 
-	DataDogClient.Namespace = activeMakoEnv.serviceID
+	DataDogClient.Namespace = ActiveMakoEnv.serviceID
 }

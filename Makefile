@@ -19,7 +19,7 @@ test:
 clean:
 	@-rm -v miru-syslog 2>/dev/null
 	@-rm -v $(GOPATH)/bin/miru-syslog 2>/dev/null
-	@-docker rmi docker.phx1.jivehosted.com/miru/miru-syslog 2>/dev/null
+	@-docker rmi docker.phx1.jivehosted.com/r2e2/miru-syslog 2>/dev/null
 
 build:
 	@echo build service
@@ -31,8 +31,8 @@ install:
 
 docker:
 	@echo build docker image
-	@docker build --no-cache --file Dockerfile --tag docker.phx1.jivehosted.com/miru/miru-syslog:latest .
+	@docker build --no-cache --file Dockerfile --tag docker.phx1.jivehosted.com/r2e2/miru-syslog:latest .
 
 run:
 	@echo run docker image
-	@docker run -it --rm -p 514:514 -p 514:514/udp -p 8081:8081 --env-file env.sh docker.phx1.jivehosted.com/miru/miru-syslog:latest
+	@docker run -it --rm -p 514:514 -p 514:514/udp -p 8081:8081 --env-file env.sh docker.phx1.jivehosted.com/r2e2/miru-syslog:latest

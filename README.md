@@ -45,7 +45,15 @@ It is written in golang, housed in a docker container, deployed via mako, into a
 
 ## TODO
 
-* provide variables via environment in true 12factor fashion
-* listen on tcp/udp port 514 for syslog traffic
-* hand off traffic to parse
+* create miru-syslog/sample-golang in minikube
+* IT in minikube
+
+* get access to ms-integ
+* copy sumologic yaml k8s spec
+* massage to fix miru-syslog
+* create miru-syslog in k8s
+
+* provide 12factor environment variables
+* listen to tcp/udp syslog traffic
+* hand off events to parse
 * forward set of MiruLogEvent objects via REST POST

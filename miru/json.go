@@ -5,7 +5,8 @@ const (
 	levelWarn = "WARN"
 )
 
-type miruLogEvent struct {
+// LogEvent holds the stumptown event
+type LogEvent struct {
 	DataCenter       string   `json:"datacenter,omitempty"`
 	Cluster          string   `json:"cluster,omitempty"`
 	Host             string   `json:"host,omitempty"`
