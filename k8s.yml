@@ -11,7 +11,7 @@ spec:
         name: miru-syslog
     spec:
       containers:
-        - image: docker.phx1.jivehosted.com/mako/miru-syslog:latest
+        - image: docker.phx1.jivehosted.com/r2e2/miru-syslog:latest
           name: miru-syslog
           command:
             - /go/bin/miru-syslog
