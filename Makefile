@@ -1,5 +1,6 @@
 .PHONY: all run docker
 
+GITHUB_TAG = github.com/bruceadowns/miru-syslog
 DOCKER_TAG = docker.phx1.jivehosted.com/r2e2/miru-syslog:latest
 
 all: check test install
@@ -25,11 +26,11 @@ clean:
 
 build:
 	@echo build service
-	@go build github.com/bruceadowns/miru-syslog
+	@go build $(GITHUB_TAG)
 
 install:
 	@echo install service
-	@go install github.com/bruceadowns/miru-syslog
+	@go install $(GITHUB_TAG)
 
 docker:
 	@echo build docker image
