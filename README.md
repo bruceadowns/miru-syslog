@@ -27,17 +27,29 @@ It is written in golang, housed in a docker container, deployed as a DaemonSet i
 
 ## TODO
 
-* get access to ms-integ
-* copy sumologic yaml to miru-syslog k8s spec
+### technical
+
+* determine how to shovel syslog
+* docker/container, journalctl/ncat, kubectl/logs
 * provide 12factor environment variables
 * listen to tcp/udp syslog traffic
 * hand off events to parse
 * forward set of MiruLogEvent objects via REST POST
 
+### non-technical
+
+* determine state of existing log aggregators (ELK) research
+* determine ballpark cost for existing sumologic usage via mako
+* ballpark hardware/aws cost for hosting miru-stumptown
+
 ### DONE
 
 * create miru-syslog/sample-golang in minikube
 * IT in minikube
+* get access to ms-integ
+* used lemur to generate client cert, kubectl to set config
+* used mako servicerepo to determine environment settings
+* copy sumologic yaml to miru-syslog k8s spec
 
 ## Test Notes
 
