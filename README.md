@@ -29,8 +29,6 @@ It is written in golang, housed in a docker container, deployed as a DaemonSet i
 
 ### technical
 
-* determine how to shovel syslog
-* docker/container, journalctl/ncat, kubectl/logs
 * provide 12factor environment variables
 * listen to tcp/udp syslog traffic
 * hand off events to parse
@@ -43,6 +41,11 @@ It is written in golang, housed in a docker container, deployed as a DaemonSet i
 * ballpark hardware/aws cost for hosting miru-stumptown
 
 ### DONE
+
+* determine how to shovel syslog
+* $ kubectl logs <mako ms pods> -f | ncat ip:514
+* deploy mako ms to minikube
+* $ journalctl -f | ncat ip:514
 
 * create miru-syslog/sample-golang in minikube
 * IT in minikube
