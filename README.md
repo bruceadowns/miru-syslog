@@ -44,10 +44,8 @@ It is written in golang, housed in a docker container, deployed as a DaemonSet i
 
 * determine how to shovel syslog
 * $ kubectl logs <mako ms pods> -f | ncat ip:514
-* deploy mako ms to minikube
+* deploy mako MSs/miru-syslog/sample-golang to minikube
 * $ journalctl -f | ncat ip:514
-
-* create miru-syslog/sample-golang in minikube
 * IT in minikube
 * get access to ms-integ
 * used lemur to generate client cert, kubectl to set config
