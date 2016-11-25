@@ -1,11 +1,15 @@
 package main
 
 import (
+	"bufio"
+	"io"
 	"log"
 	"net"
 	"os"
 
 	"github.com/bruceadowns/miru-syslog/miru"
+	// "github.com/jeromer/syslogparser"
+	// "github.com/jeromer/syslogparser/rfc3164"
 )
 
 type miruEnv struct {
@@ -45,18 +49,20 @@ func udpMessagePump() error {
 func handleTCPConnection(c net.Conn) {
 	log.Print("New TCP connection")
 
-	buffer := make([]byte, 1024)
-	n, err := c.Read(buffer)
-	if err != nil {
-		log.Print(err)
-		return
-	}
+	buf := bufio.NewReader(c)
+	var err error
 
-	log.Printf("Read tcp buffer: %s", buffer[:n])
-
-	err = miru.PostOneEvent(activeMiruEnv.stumptownAddress)
-	if err != nil {
-		log.Print(err)
+	for err == nil {
+		var line []byte
+		line, err = buf.ReadBytes('\n')
+		if err == nil {
+			log.Printf("Send tcp buffer to parse channel: %s", line)
+		} else if err == io.EOF {
+			log.Printf("Send last tcp buffer to parse channel: %s", line)
+		} else {
+			log.Print(err)
+			return
+		}
 	}
 }
 
@@ -70,6 +76,7 @@ func tcpMessagePump() error {
 	defer l.Close()
 
 	for {
+		log.Printf("Accept connections")
 		c, err := l.Accept()
 		if err != nil {
 			return err
