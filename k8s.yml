@@ -25,9 +25,11 @@ spec:
               name: syslogudpport
               protocol: UDP
           env:
-          - name: MIRU_SYSLOG_HOST_PORT
+          - name: MIRU_SYSLOG_TCP_ADDR_PORT
             value: :514
-          - name: MIRU_STUMPTOWN_HOST_PORT
+          - name: MIRU_SYSLOG_UDP_ADDR_PORT
+            value: :514
+          - name: MIRU_STUMPTOWN_ADDR_PORT
             value: 10.126.5.155:10004
           livenessProbe:
             tcpSocket:

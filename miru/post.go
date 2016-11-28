@@ -11,6 +11,11 @@ import (
 
 // PostOneEvent demonstrates sending a single log event to stumptown
 func PostOneEvent(addr string) error {
+	if addr == "" {
+		log.Print("Stumptown address is empty.")
+		return nil
+	}
+
 	events := []LogEvent{{
 		DataCenter: "bad-dc",
 		Cluster:    "bad-cluster",
@@ -45,6 +50,11 @@ func PostOneEvent(addr string) error {
 
 // PostManyEvents demonstrates sending more than one log event to stumptown
 func PostManyEvents(addr string) error {
+	if addr == "" {
+		log.Print("Stumptown address is empty.")
+		return nil
+	}
+
 	const SIZE = 10
 	events := make([]LogEvent, SIZE)
 

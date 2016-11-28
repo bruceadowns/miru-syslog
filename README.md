@@ -15,15 +15,11 @@ It is written in golang, housed in a docker container, deployed as a DaemonSet i
 
 ### Miru
 
-* miru-stumptown host addr:port
-* miru-stumptown intake url - default to /miru/stumptown/intake
-
-### Listener
-
-* tcp listen port - default to :514
-* udp listen port - default to empty/off
-* queue size
-* batch size
+* MIRU_SYSLOG_TCP_ADDR_PORT - if empty, do not listen for tcp traffic
+* MIRU_SYSLOG_UDP_ADDR_PORT - if empty, do not listen for udp traffic
+* MIRU_STUMPTOWN_ADDR_PORT - if empty, do not post to stumptown
+* MIRU_STUMPTOWN_INTAKE_URL - default to /miru/stumptown/intake
+* CHANNEL_BUFFER_SIZE_PARSE - default to 100
 
 ## TODO
 
@@ -58,8 +54,8 @@ It is written in golang, housed in a docker container, deployed as a DaemonSet i
 make docker
 make run
 
-export MIRU_STUMPTOWN_HOST_PORT=10.126.5.155:10004
-export MIRU_SYSLOG_HOST_PORT=`docker-machine ip`:514
+export MIRU_STUMPTOWN_ADDR_PORT=10.126.5.155:10004
+export MIRU_SYSLOG_TCP_ADDR_PORT=`docker-machine ip`:514
 go test -v --run Test.*Client
 ```
 
@@ -71,9 +67,12 @@ kubectl create -f k8s.yml
 kubectl get pod
 kubectl get daemonset
 
-export MIRU_STUMPTOWN_HOST_PORT=10.126.5.155:10004
-export MIRU_SYSLOG_HOST_PORT=`minikube ip`:514
-go test -v --run Test.*Client
+export MIRU_STUMPTOWN_ADDR_PORT=10.126.5.155:10004
+export MIRU_SYSLOG_TCP_ADDR_PORT=`minikube ip`:514
+go test -v --run TestTcpClient
+
+#export MIRU_SYSLOG_UDP_ADDR_PORT=`minikube ip`:514
+#go test -v --run TestUdpClient
 
 kubectl logs miru-syslog-xxxxx
 kubectl delete daemonset miru-syslog
