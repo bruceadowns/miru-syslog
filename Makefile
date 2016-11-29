@@ -38,7 +38,7 @@ docker:
 
 run:
 	@echo run docker image
-	@docker run -it --rm -p 514:514 -p 514:514/udp -p 8081:8081 --env-file env.sh $(DOCKER_TAG)
+	@docker run -it --rm -p 514:514 -p 514:514/udp --env-file env.sh $(DOCKER_TAG)
 
 push:
 	@echo push docker image
