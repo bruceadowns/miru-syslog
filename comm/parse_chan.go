@@ -18,7 +18,7 @@ func (p *Packet) String() string {
 
 // IsValid returns T/F
 func (p *Packet) IsValid() bool {
-	if p.Address.String() == "" {
+	if len(p.Address.String()) == 0 {
 		log.Print("Address is empty")
 		return false
 	}
