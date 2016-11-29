@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"io"
 	"log"
 	"net"
@@ -56,9 +57,11 @@ func udpMessagePump(wg *sync.WaitGroup) {
 				return
 			}
 
-			p := &comm.Packet{Address: addr, Message: buffer[:n]}
-			log.Printf("Read udp buffer from %s", p)
-			parseChan <- p
+			for _, line := range bytes.Split(buffer[:n], []byte{'\n'}) {
+				p := &comm.Packet{Address: addr, Message: line}
+				log.Printf("Read udp buffer from %s", p.Address)
+				parseChan <- p
+			}
 		}
 	}()
 }
@@ -73,15 +76,10 @@ func handleTCPConnection(c net.Conn) {
 	for err == nil {
 		var line []byte
 		line, err = buf.ReadBytes('\n')
-		if err == nil {
+		if err == nil || err == io.EOF {
 			p := &comm.Packet{Address: c.RemoteAddr(), Message: line}
-			log.Printf("Send tcp buffer to parse channel: %s", p)
+			log.Printf("Read tcp buffer from: %s", p.Address)
 			parseChan <- p
-		} else if err == io.EOF {
-			p := &comm.Packet{Address: c.RemoteAddr(), Message: line}
-			log.Printf("Send tcp buffer to parse channel: %s", p)
-			parseChan <- p
-			log.Printf("Send last tcp buffer to parse channel: %s", line)
 		} else {
 			log.Print(err)
 			return
