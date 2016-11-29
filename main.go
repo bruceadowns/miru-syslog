@@ -6,11 +6,10 @@ import (
 	"io"
 	"log"
 	"net"
-	"os"
-	"strconv"
 	"sync"
 
 	"github.com/bruceadowns/miru-syslog/comm"
+	"github.com/bruceadowns/miru-syslog/common"
 	// "github.com/bruceadowns/miru-syslog/miru"
 	// "github.com/jeromer/syslogparser"
 	// "github.com/jeromer/syslogparser/rfc3164"
@@ -22,6 +21,7 @@ type miruEnv struct {
 	stumptownAddress       string
 	miruStumptownIntakeURL string
 	channelBufferSizeParse int
+	udpReceiveBufferSize   int
 }
 
 var (
@@ -90,13 +90,13 @@ func handleTCPConnection(c net.Conn) {
 func tcpMessagePump(wg *sync.WaitGroup) {
 	wg.Add(1)
 
-	if activeMiruEnv.tcpListenAddress == "" {
-		log.Printf("Not listening for for tcp traffic")
-		return
-	}
-
 	go func() {
 		defer wg.Done()
+
+		if activeMiruEnv.tcpListenAddress == "" {
+			log.Printf("Not listening for for tcp traffic")
+			return
+		}
 
 		log.Printf("Listen for tcp traffic on %s", activeMiruEnv.tcpListenAddress)
 
@@ -121,51 +121,28 @@ func tcpMessagePump(wg *sync.WaitGroup) {
 }
 
 func init() {
-	activeMiruEnv.tcpListenAddress = os.Getenv("MIRU_SYSLOG_TCP_ADDR_PORT")
-	if activeMiruEnv.tcpListenAddress == "" {
-		log.Print("MIRU_SYSLOG_TCP_ADDR_PORT not present in environment. Not listening for tcp traffic.")
-	}
+	activeMiruEnv.tcpListenAddress = common.GetEnvStr("MIRU_SYSLOG_TCP_ADDR_PORT", "")
 	log.Printf("MIRU_SYSLOG_TCP_ADDR_PORT set to %s.", activeMiruEnv.tcpListenAddress)
 
-	activeMiruEnv.udpListenAddress = os.Getenv("MIRU_SYSLOG_UDP_ADDR_PORT")
-	if activeMiruEnv.udpListenAddress == "" {
-		log.Print("MIRU_SYSLOG_UDP_ADDR_PORT not present in environment. Not listening for udp traffic.")
-	}
+	activeMiruEnv.udpListenAddress = common.GetEnvStr("MIRU_SYSLOG_UDP_ADDR_PORT", "")
 	log.Printf("MIRU_SYSLOG_UDP_ADDR_PORT set to %s.", activeMiruEnv.udpListenAddress)
 
-	activeMiruEnv.stumptownAddress = os.Getenv("MIRU_STUMPTOWN_ADDR_PORT")
-	if activeMiruEnv.stumptownAddress == "" {
-		log.Print("MIRU_STUMPTOWN_ADDR_PORT not present in environment.")
-	}
+	activeMiruEnv.stumptownAddress = common.GetEnvStr("MIRU_STUMPTOWN_ADDR_PORT", "")
 	log.Printf("MIRU_STUMPTOWN_ADDR_PORT set to %s.", activeMiruEnv.stumptownAddress)
 
-	activeMiruEnv.miruStumptownIntakeURL = "/miru/stumptown/intake"
-	sIntake := os.Getenv("MIRU_STUMPTOWN_INTAKE_URL")
-	if sIntake == "" {
-		log.Print("MIRU_STUMPTOWN_INTAKE_URL not present in environment.")
-	} else {
-		activeMiruEnv.miruStumptownIntakeURL = sIntake
-	}
+	activeMiruEnv.miruStumptownIntakeURL = common.GetEnvStr("MIRU_STUMPTOWN_INTAKE_URL", "/miru/stumptown/intake")
 	log.Printf("MIRU_STUMPTOWN_INTAKE_URL set to %s.", activeMiruEnv.miruStumptownIntakeURL)
 
-	activeMiruEnv.channelBufferSizeParse = 100
-	sSize := os.Getenv("CHANNEL_BUFFER_SIZE_PARSE")
-	if sSize == "" {
-		log.Printf("CHANNEL_BUFFER_SIZE_PARSE not present in environment.")
-	} else {
-		iSize, err := strconv.Atoi(sSize)
-		if err == nil {
-			activeMiruEnv.channelBufferSizeParse = iSize
-		} else {
-			log.Printf("CHANNEL_BUFFER_SIZE_PARSE not numeric %s.", sSize)
-		}
-	}
+	activeMiruEnv.channelBufferSizeParse = common.GetEnvInt("CHANNEL_BUFFER_SIZE_PARSE", 100)
 	log.Printf("CHANNEL_BUFFER_SIZE_PARSE set to %d.", activeMiruEnv.channelBufferSizeParse)
+
+	activeMiruEnv.udpReceiveBufferSize = common.GetEnvInt("UDP_RECEIVE_BUFFER_SIZE", 1024)
+	log.Printf("UDP_RECEIVE_BUFFER_SIZE set to %d.", activeMiruEnv.udpReceiveBufferSize)
+
+	parseChan = comm.ParseChan(activeMiruEnv.channelBufferSizeParse)
 }
 
 func main() {
-	parseChan = comm.ParseChan(activeMiruEnv.channelBufferSizeParse)
-
 	var wg sync.WaitGroup
 
 	log.Print("Start udp handler")
