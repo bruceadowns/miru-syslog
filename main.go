@@ -7,9 +7,10 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"sync"
 
 	"github.com/bruceadowns/miru-syslog/comm"
-	"github.com/bruceadowns/miru-syslog/miru"
+	// "github.com/bruceadowns/miru-syslog/miru"
 	// "github.com/jeromer/syslogparser"
 	// "github.com/jeromer/syslogparser/rfc3164"
 )
@@ -27,38 +28,39 @@ var (
 	parseChan     chan *comm.Packet
 )
 
-func udpMessagePump() error {
-	if activeMiruEnv.udpListenAddress == "" {
-		log.Printf("Not listening for for udp traffic")
-		return nil
-	}
+func udpMessagePump(wg *sync.WaitGroup) {
+	wg.Add(1)
 
-	log.Printf("Listen for udp traffic on %s", activeMiruEnv.udpListenAddress)
+	go func() {
+		defer wg.Done()
 
-	pc, err := net.ListenPacket("udp", activeMiruEnv.udpListenAddress)
-	if err != nil {
-		return err
-	}
-	defer pc.Close()
-
-	log.Print("Handle UDP connections")
-	for {
-		buffer := make([]byte, 1024)
-		n, addr, err := pc.ReadFrom(buffer)
-		if err != nil {
-			log.Print(err)
-			return err
+		if activeMiruEnv.udpListenAddress == "" {
+			log.Printf("Not listening for for udp traffic")
+			return
 		}
 
-		p := &comm.Packet{Address: addr, Message: buffer[:n]}
-		log.Printf("Read udp buffer from %s", p)
-		parseChan <- p
+		log.Printf("Listen for udp traffic on %s", activeMiruEnv.udpListenAddress)
 
-		err = miru.PostManyEvents(activeMiruEnv.stumptownAddress)
+		pc, err := net.ListenPacket("udp", activeMiruEnv.udpListenAddress)
 		if err != nil {
-			log.Print(err)
+			return
 		}
-	}
+		defer pc.Close()
+
+		log.Print("Handle UDP connections")
+		for {
+			buffer := make([]byte, 1024)
+			n, addr, err := pc.ReadFrom(buffer)
+			if err != nil {
+				log.Print(err)
+				return
+			}
+
+			p := &comm.Packet{Address: addr, Message: buffer[:n]}
+			log.Printf("Read udp buffer from %s", p)
+			parseChan <- p
+		}
+	}()
 }
 
 func handleTCPConnection(c net.Conn) {
@@ -87,29 +89,37 @@ func handleTCPConnection(c net.Conn) {
 	}
 }
 
-func tcpMessagePump() error {
+func tcpMessagePump(wg *sync.WaitGroup) {
+	wg.Add(1)
+
 	if activeMiruEnv.tcpListenAddress == "" {
 		log.Printf("Not listening for for tcp traffic")
-		return nil
+		return
 	}
 
-	log.Printf("Listen for tcp traffic on %s", activeMiruEnv.tcpListenAddress)
+	go func() {
+		defer wg.Done()
 
-	l, err := net.Listen("tcp", activeMiruEnv.tcpListenAddress)
-	if err != nil {
-		return err
-	}
-	defer l.Close()
+		log.Printf("Listen for tcp traffic on %s", activeMiruEnv.tcpListenAddress)
 
-	for {
-		log.Printf("Accept connections")
-		c, err := l.Accept()
+		l, err := net.Listen("tcp", activeMiruEnv.tcpListenAddress)
 		if err != nil {
-			return err
+			log.Print(err)
+			return
 		}
+		defer l.Close()
 
-		go handleTCPConnection(c)
-	}
+		for {
+			log.Printf("Accept connections")
+			c, err := l.Accept()
+			if err != nil {
+				log.Print(err)
+				return
+			}
+
+			go handleTCPConnection(c)
+		}
+	}()
 }
 
 func init() {
@@ -158,12 +168,14 @@ func init() {
 func main() {
 	parseChan = comm.ParseChan(activeMiruEnv.channelBufferSizeParse)
 
+	var wg sync.WaitGroup
+
 	log.Print("Start udp handler")
-	go udpMessagePump()
+	udpMessagePump(&wg)
 
 	log.Print("Start tcp pump")
-	err := tcpMessagePump()
-	if err != nil {
-		log.Fatal(err)
-	}
+	tcpMessagePump(&wg)
+
+	log.Print("Wait for both message pumps to finish")
+	wg.Wait()
 }
