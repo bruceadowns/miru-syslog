@@ -17,6 +17,7 @@ func GetEnvStr(name, def string) (res string) {
 		res = s
 	}
 
+	log.Printf("%s set to %s.", name, res)
 	return
 }
 
@@ -36,5 +37,6 @@ func GetEnvInt(name string, def int) (res int) {
 		}
 	}
 
+	log.Printf("%s set to %d.", name, res)
 	return
 }

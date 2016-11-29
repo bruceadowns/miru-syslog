@@ -1,5 +1,7 @@
 package miru
 
+import "fmt"
+
 const (
 	// LevelInfo stringizes info log level
 	LevelInfo = "INFO"
@@ -22,4 +24,8 @@ type LogEvent struct {
 	Message          string   `json:"message,omitempty"`
 	Timestamp        string   `json:"timestamp,omitempty"`
 	ThrownStackTrace []string `json:"thrownStackTrace,omitempty"`
+}
+
+func (l *LogEvent) String() string {
+	return fmt.Sprintf("datacenter: %s - cluster: %s - message: %s", l.DataCenter, l.Cluster, l.Message)
 }

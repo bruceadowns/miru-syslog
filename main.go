@@ -10,9 +10,7 @@ import (
 
 	"github.com/bruceadowns/miru-syslog/comm"
 	"github.com/bruceadowns/miru-syslog/common"
-	// "github.com/bruceadowns/miru-syslog/miru"
-	// "github.com/jeromer/syslogparser"
-	// "github.com/jeromer/syslogparser/rfc3164"
+	"github.com/bruceadowns/miru-syslog/miru"
 )
 
 type miruEnv struct {
@@ -21,12 +19,14 @@ type miruEnv struct {
 	stumptownAddress       string
 	miruStumptownIntakeURL string
 	channelBufferSizeParse int
+	channelBufferSizePost  int
 	udpReceiveBufferSize   int
 }
 
 var (
 	activeMiruEnv miruEnv
 	parseChan     chan *comm.Packet
+	postChan      chan *miru.LogEvent
 )
 
 func udpMessagePump(wg *sync.WaitGroup) {
@@ -125,24 +125,18 @@ func tcpMessagePump(wg *sync.WaitGroup) {
 
 func init() {
 	activeMiruEnv.tcpListenAddress = common.GetEnvStr("MIRU_SYSLOG_TCP_ADDR_PORT", "")
-	log.Printf("MIRU_SYSLOG_TCP_ADDR_PORT set to %s.", activeMiruEnv.tcpListenAddress)
-
 	activeMiruEnv.udpListenAddress = common.GetEnvStr("MIRU_SYSLOG_UDP_ADDR_PORT", "")
-	log.Printf("MIRU_SYSLOG_UDP_ADDR_PORT set to %s.", activeMiruEnv.udpListenAddress)
-
 	activeMiruEnv.stumptownAddress = common.GetEnvStr("MIRU_STUMPTOWN_ADDR_PORT", "")
-	log.Printf("MIRU_STUMPTOWN_ADDR_PORT set to %s.", activeMiruEnv.stumptownAddress)
-
 	activeMiruEnv.miruStumptownIntakeURL = common.GetEnvStr("MIRU_STUMPTOWN_INTAKE_URL", "/miru/stumptown/intake")
-	log.Printf("MIRU_STUMPTOWN_INTAKE_URL set to %s.", activeMiruEnv.miruStumptownIntakeURL)
+	activeMiruEnv.channelBufferSizeParse = common.GetEnvInt("CHANNEL_BUFFER_SIZE_PARSE", 1024)
+	activeMiruEnv.channelBufferSizePost = common.GetEnvInt("CHANNEL_BUFFER_SIZE_POST", 1024)
+	activeMiruEnv.udpReceiveBufferSize = common.GetEnvInt("UDP_RECEIVE_BUFFER_SIZE", 2*1024*1024)
 
-	activeMiruEnv.channelBufferSizeParse = common.GetEnvInt("CHANNEL_BUFFER_SIZE_PARSE", 100)
-	log.Printf("CHANNEL_BUFFER_SIZE_PARSE set to %d.", activeMiruEnv.channelBufferSizeParse)
-
-	activeMiruEnv.udpReceiveBufferSize = common.GetEnvInt("UDP_RECEIVE_BUFFER_SIZE", 1024)
-	log.Printf("UDP_RECEIVE_BUFFER_SIZE set to %d.", activeMiruEnv.udpReceiveBufferSize)
-
-	parseChan = comm.ParseChan(activeMiruEnv.channelBufferSizeParse)
+	postChan = comm.PostChan(
+		activeMiruEnv.channelBufferSizePost,
+		activeMiruEnv.stumptownAddress,
+		activeMiruEnv.miruStumptownIntakeURL)
+	parseChan = comm.ParseChan(activeMiruEnv.channelBufferSizeParse, postChan)
 }
 
 func main() {

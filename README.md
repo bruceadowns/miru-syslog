@@ -19,16 +19,16 @@ It is written in golang, housed in a docker container, deployed as a DaemonSet i
 * MIRU_SYSLOG_UDP_ADDR_PORT - if empty, do not listen for udp traffic
 * MIRU_STUMPTOWN_ADDR_PORT - if empty, do not post to stumptown
 * MIRU_STUMPTOWN_INTAKE_URL - default to /miru/stumptown/intake
-* CHANNEL_BUFFER_SIZE_PARSE - default to 100
-* UDP_RECEIVE_BUFFER_SIZE - default to 1024
+* CHANNEL_BUFFER_SIZE_PARSE - default to 1024
+* CHANNEL_BUFFER_SIZE_POST - default to 1024
+* UDP_RECEIVE_BUFFER_SIZE - default to 2*1024*1024
 
 ## TODO
 
 ### technical
 
-* provide 12factor environment variables
-* listen to tcp/udp syslog traffic
-* hand off events to parse
+* determine event type (syslog, dates, json)
+* parse each event type
 * forward set of MiruLogEvent objects via REST POST
 
 ### non-technical
@@ -39,6 +39,9 @@ It is written in golang, housed in a docker container, deployed as a DaemonSet i
 
 ### DONE
 
+* hand off events to parse
+* listen to tcp/udp syslog traffic
+* provide 12factor environment variables
 * determine how to shovel syslog
 * $ kubectl logs <mako ms pods> -f | ncat ip:514
 * deploy mako MSs/miru-syslog/sample-golang to minikube
