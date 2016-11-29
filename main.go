@@ -35,7 +35,7 @@ func udpMessagePump(wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()
 
-		if activeMiruEnv.udpListenAddress == "" {
+		if len(activeMiruEnv.udpListenAddress) == 0 {
 			log.Printf("Not listening for for udp traffic")
 			return
 		}
@@ -50,17 +50,18 @@ func udpMessagePump(wg *sync.WaitGroup) {
 
 		log.Print("Handle UDP connections")
 		for {
-			buffer := make([]byte, 1024)
+			buffer := make([]byte, activeMiruEnv.udpReceiveBufferSize)
 			n, addr, err := pc.ReadFrom(buffer)
 			if err != nil {
 				log.Print(err)
 				return
 			}
 
+			log.Printf("Read udp buffer from %s", addr)
 			for _, line := range bytes.Split(buffer[:n], []byte{'\n'}) {
-				p := &comm.Packet{Address: addr, Message: line}
-				log.Printf("Read udp buffer from %s", p.Address)
-				parseChan <- p
+				if len(line) > 0 {
+					parseChan <- &comm.Packet{Address: addr, Message: line}
+				}
 			}
 		}
 	}()
@@ -77,9 +78,11 @@ func handleTCPConnection(c net.Conn) {
 		var line []byte
 		line, err = buf.ReadBytes('\n')
 		if err == nil || err == io.EOF {
-			p := &comm.Packet{Address: c.RemoteAddr(), Message: line}
-			log.Printf("Read tcp buffer from: %s", p.Address)
-			parseChan <- p
+			if len(line) > 0 {
+				p := &comm.Packet{Address: c.RemoteAddr(), Message: line}
+				log.Printf("Read tcp buffer from: %s", p.Address)
+				parseChan <- p
+			}
 		} else {
 			log.Print(err)
 			return
@@ -93,7 +96,7 @@ func tcpMessagePump(wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()
 
-		if activeMiruEnv.tcpListenAddress == "" {
+		if len(activeMiruEnv.tcpListenAddress) == 0 {
 			log.Printf("Not listening for for tcp traffic")
 			return
 		}

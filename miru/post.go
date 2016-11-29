@@ -11,7 +11,7 @@ import (
 
 // PostOneEvent demonstrates sending a single log event to stumptown
 func PostOneEvent(addr string) error {
-	if addr == "" {
+	if len(addr) == 0 {
 		log.Print("Stumptown address is empty.")
 		return nil
 	}
@@ -50,7 +50,7 @@ func PostOneEvent(addr string) error {
 
 // PostManyEvents demonstrates sending more than one log event to stumptown
 func PostManyEvents(addr string) error {
-	if addr == "" {
+	if len(addr) == 0 {
 		log.Print("Stumptown address is empty.")
 		return nil
 	}

@@ -20,6 +20,7 @@ It is written in golang, housed in a docker container, deployed as a DaemonSet i
 * MIRU_STUMPTOWN_ADDR_PORT - if empty, do not post to stumptown
 * MIRU_STUMPTOWN_INTAKE_URL - default to /miru/stumptown/intake
 * CHANNEL_BUFFER_SIZE_PARSE - default to 100
+* UDP_RECEIVE_BUFFER_SIZE - default to 1024
 
 ## TODO
 

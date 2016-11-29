@@ -10,7 +10,7 @@ import (
 
 func TestTcpClient(t *testing.T) {
 	dockerAddr := os.Getenv("MIRU_SYSLOG_TCP_ADDR_PORT")
-	if dockerAddr == "" {
+	if len(dockerAddr) == 0 {
 		t.Skip("MIRU_SYSLOG_TCP_ADDR_PORT not found.")
 	}
 
@@ -29,7 +29,7 @@ func TestTcpClient(t *testing.T) {
 
 func TestUdpClient(t *testing.T) {
 	dockerAddr := os.Getenv("MIRU_SYSLOG_UDP_ADDR_PORT")
-	if dockerAddr == "" {
+	if len(dockerAddr) == 0 {
 		t.Skip("MIRU_SYSLOG_UDP_ADDR_PORT not found.")
 	}
 
@@ -55,7 +55,7 @@ func handleConnection(c net.Conn) {
 
 func TestTcpServer(t *testing.T) {
 	dockerAddr := os.Getenv("MIRU_SYSLOG_TCP_ADDR_PORT_SERVER")
-	if dockerAddr == "" {
+	if len(dockerAddr) == 0 {
 		t.Skip("MIRU_SYSLOG_TCP_ADDR_PORT_SERVER not found.")
 	}
 
@@ -78,7 +78,7 @@ func TestTcpServer(t *testing.T) {
 
 func TestUdpServer(t *testing.T) {
 	dockerAddr := os.Getenv("MIRU_SYSLOG_UDP_ADDR_PORT_SERVER")
-	if dockerAddr == "" {
+	if len(dockerAddr) == 0 {
 		t.Skip("MIRU_SYSLOG_UDP_ADDR_PORT_SERVER not found.")
 	}
 
