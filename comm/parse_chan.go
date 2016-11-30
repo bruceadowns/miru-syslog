@@ -7,8 +7,8 @@ import (
 
 	"github.com/bruceadowns/miru-syslog/miru"
 
-	"github.com/jeromer/syslogparser/rfc3164"
-	"github.com/jeromer/syslogparser/rfc5424"
+	"github.com/bruceadowns/syslogparser/rfc3164"
+	"github.com/bruceadowns/syslogparser/rfc5424"
 )
 
 // MakoJSON holds mako structured json
