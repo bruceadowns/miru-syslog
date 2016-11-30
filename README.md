@@ -2,7 +2,9 @@
 
 Syslog collector that listens for syslog traffic, parses, and forwards to miru-stumptown.
 
-It is written in golang, housed in a docker container, deployed as a DaemonSet into a kubernetes cluster.
+It is written in golang, housed in a docker container, deployed as a DaemonSet into a Kubernetes cluster.
+
+The syslog protocol is defined via rfc3164 and rfc5424.
 
 ## Endpoints
 
@@ -23,6 +25,8 @@ It is written in golang, housed in a docker container, deployed as a DaemonSet i
 * CHANNEL_BUFFER_SIZE_POST - default to 1024
 * UDP_RECEIVE_BUFFER_SIZE - default to 2*1024*1024
 
+Note,
+
 ## TODO
 
 ### technical
@@ -34,11 +38,11 @@ It is written in golang, housed in a docker container, deployed as a DaemonSet i
 ### non-technical
 
 * determine state of existing log aggregators (ELK) research
-* determine ballpark cost for existing sumologic usage via mako
 * ballpark hardware/aws cost for hosting miru-stumptown
 
 ### DONE
 
+* determine ballpark cost for existing sumologic usage via mako
 * hand off events to parse
 * listen to tcp/udp syslog traffic
 * provide 12factor environment variables
@@ -54,30 +58,57 @@ It is written in golang, housed in a docker container, deployed as a DaemonSet i
 
 ## Test Notes
 
-```
-make docker
-make run
-
-export MIRU_STUMPTOWN_ADDR_PORT=10.126.5.155:10004
-export MIRU_SYSLOG_TCP_ADDR_PORT=`docker-machine ip`:514
-go test -v --run Test.*Client
-```
+### Get and run minikube
 
 ```
+git clone https://github.com/kubernetes/minikube
+
 minikube start
 minikube ip
+kubectl cluster-info
+minikube stop
+```
 
-kubectl create -f k8s.yml
-kubectl get pod
+### Create kubernetes daemonset
+
+```
+kubectl create -f docker/k8s.yml
+
 kubectl get daemonset
-
-export MIRU_STUMPTOWN_ADDR_PORT=10.126.5.155:10004
-export MIRU_SYSLOG_TCP_ADDR_PORT=`minikube ip`:514
-go test -v --run TestTcpClient
-
-#export MIRU_SYSLOG_UDP_ADDR_PORT=`minikube ip`:514
-#go test -v --run TestUdpClient
+kubectl get pods
 
 kubectl logs miru-syslog-xxxxx
 kubectl delete daemonset miru-syslog
 ```
+
+### Run main.go via docker
+
+```
+make docker
+make run
+```
+
+### Test tcp client
+
+```
+export MIRU_STUMPTOWN_ADDR_PORT=10.126.5.155:10004
+export MIRU_SYSLOG_TCP_ADDR_PORT=`minikube ip`:514
+go test -v --run TestTcpClient
+```
+
+### Test udp client
+
+```
+export MIRU_STUMPTOWN_ADDR_PORT=10.126.5.155:10004
+export MIRU_SYSLOG_UDP_ADDR_PORT=`minikube ip`:514
+go test -v --run TestUdpClient
+```
+
+## Reference
+
+* https://golang.org/
+* https://www.docker.com/
+* http://kubernetes.io/
+* http://kubernetes.io/docs/admin/daemons/
+* https://www.ietf.org/rfc/rfc3164.txt
+* https://www.ietf.org/rfc/rfc5424.txt

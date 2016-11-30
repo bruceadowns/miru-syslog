@@ -34,11 +34,11 @@ install:
 
 docker:
 	@echo build docker image
-	@docker build --no-cache --file Dockerfile --tag $(DOCKER_TAG) .
+	@docker build --no-cache --file docker/Dockerfile --tag $(DOCKER_TAG) .
 
 run:
 	@echo run docker image
-	@docker run -it --rm -p 514:514 -p 514:514/udp --env-file env.sh $(DOCKER_TAG)
+	@docker run -it --rm -p 514:514 -p 514:514/udp --env-file docker/env.sh $(DOCKER_TAG)
 
 push:
 	@echo push docker image
