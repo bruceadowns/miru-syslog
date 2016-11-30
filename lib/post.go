@@ -10,7 +10,7 @@ import (
 )
 
 // Post sends a single log event to stumptown
-func Post(a, u string, logEvent *MiruLogEvent) error {
+func Post(a, u string, logEvent *LogEvent) error {
 	if len(a) == 0 {
 		log.Print("Stumptown address is empty.")
 		return nil
@@ -20,7 +20,7 @@ func Post(a, u string, logEvent *MiruLogEvent) error {
 		return nil
 	}
 
-	events := []*MiruLogEvent{logEvent}
+	events := []*LogEvent{logEvent}
 
 	buf := &bytes.Buffer{}
 	if err := json.NewEncoder(buf).Encode(events); err != nil {

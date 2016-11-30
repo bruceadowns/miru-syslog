@@ -9,26 +9,11 @@ import (
 	"github.com/bruceadowns/syslogparser/rfc5424"
 )
 
-// MakoJSON holds mako structured json
-type MakoJSON struct {
-	Timestamp          string `json:"@timestamp,omitempty"`
-	Version            int    `json:"@version,omitempty"`
-	Message            string `json:"message,omitempty"`
-	LoggerName         string `json:"logger_name,omitempty"`
-	ThreadName         string `json:"thread_name,omitempty"`
-	Level              string `json:"level,omitempty"`
-	LevelValue         int    `json:"level_value,omitempty"`
-	ServiceName        string `json:"service_name,omitempty"`
-	ServiceEnvironment string `json:"service_environment,omitempty"`
-	ServicePipeline    string `json:"service_pipeline,omitempty"`
-	ServiceVersion     string `json:"service_version,omitempty"`
-}
-
 // Packet holds the incoming traffic info
 type Packet struct {
 	Address  net.Addr
 	Message  []byte
-	LogEvent *MiruLogEvent
+	LogEvent *LogEvent
 }
 
 func (p *Packet) String() string {
@@ -51,7 +36,7 @@ func (p *Packet) IsValid() bool {
 }
 
 // Mill determines message type and parses into a LogEvent
-func (p *Packet) Mill() (res *MiruLogEvent) {
+func (p *Packet) Mill() (res *LogEvent) {
 	log.Printf("%s", p)
 
 	/*
@@ -67,7 +52,7 @@ func (p *Packet) Mill() (res *MiruLogEvent) {
 		{
 			parser := rfc3164.NewParser(p.Message)
 			if err := parser.Parse(); err == nil {
-				res = &MiruLogEvent{}
+				res = &LogEvent{}
 				break
 			}
 		}
@@ -75,13 +60,13 @@ func (p *Packet) Mill() (res *MiruLogEvent) {
 		{
 			parser := rfc5424.NewParser(p.Message)
 			if err := parser.Parse(); err == nil {
-				res = &MiruLogEvent{}
+				res = &LogEvent{}
 				break
 			}
 		}
 
 		{
-			res = &MiruLogEvent{
+			res = &LogEvent{
 				DataCenter: "bad-dc",
 				Cluster:    "bad-cluster",
 				Host:       "bad-host",
@@ -100,31 +85,6 @@ func (p *Packet) Mill() (res *MiruLogEvent) {
 	} else {
 		log.Print(res)
 	}
-
-	return
-}
-
-// ParseChan creates and returns a buffered channel used to capture line input
-func ParseChan(size int, postChan chan *MiruLogEvent) (ch chan *Packet) {
-	ch = make(chan *Packet, size)
-
-	go func() {
-		for {
-			select {
-			case m := <-ch:
-				if !m.IsValid() {
-					continue
-				}
-
-				if logEvent := m.Mill(); logEvent == nil {
-					log.Printf("Error parsing message: [%s]", m)
-				} else {
-					log.Printf("Posting log event: [%s]", logEvent)
-					postChan <- logEvent
-				}
-			}
-		}
-	}()
 
 	return
 }

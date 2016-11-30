@@ -24,7 +24,7 @@ type miruEnv struct {
 var (
 	activeMiruEnv miruEnv
 	parseChan     chan *lib.Packet
-	postChan      chan *lib.MiruLogEvent
+	postChan      chan *lib.LogEvent
 )
 
 func udpMessagePump(wg *sync.WaitGroup) {
