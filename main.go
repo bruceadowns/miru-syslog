@@ -140,8 +140,6 @@ func init() {
 }
 
 func main() {
-	log.Print("hello world")
-
 	var wg sync.WaitGroup
 
 	log.Print("Start udp handler")
