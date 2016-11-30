@@ -1,11 +1,9 @@
-package comm
+package lib
 
 import (
 	"fmt"
 	"log"
 	"net"
-
-	"github.com/bruceadowns/miru-syslog/miru"
 
 	"github.com/bruceadowns/syslogparser/rfc3164"
 	"github.com/bruceadowns/syslogparser/rfc5424"
@@ -30,7 +28,7 @@ type MakoJSON struct {
 type Packet struct {
 	Address  net.Addr
 	Message  []byte
-	LogEvent *miru.LogEvent
+	LogEvent *MiruLogEvent
 }
 
 func (p *Packet) String() string {
@@ -53,7 +51,7 @@ func (p *Packet) IsValid() bool {
 }
 
 // Mill determines message type and parses into a LogEvent
-func (p *Packet) Mill() (res *miru.LogEvent) {
+func (p *Packet) Mill() (res *MiruLogEvent) {
 	log.Printf("%s", p)
 
 	/*
@@ -69,7 +67,7 @@ func (p *Packet) Mill() (res *miru.LogEvent) {
 		{
 			parser := rfc3164.NewParser(p.Message)
 			if err := parser.Parse(); err == nil {
-				res = &miru.LogEvent{}
+				res = &MiruLogEvent{}
 				break
 			}
 		}
@@ -77,20 +75,20 @@ func (p *Packet) Mill() (res *miru.LogEvent) {
 		{
 			parser := rfc5424.NewParser(p.Message)
 			if err := parser.Parse(); err == nil {
-				res = &miru.LogEvent{}
+				res = &MiruLogEvent{}
 				break
 			}
 		}
 
 		{
-			res = &miru.LogEvent{
+			res = &MiruLogEvent{
 				DataCenter: "bad-dc",
 				Cluster:    "bad-cluster",
 				Host:       "bad-host",
 				Service:    "bad-service",
 				Instance:   "bad-instance",
 				Version:    "1.0",
-				Level:      miru.LevelInfo,
+				Level:      LevelInfo,
 				Message:    fmt.Sprintf("%s", p.Message),
 			}
 			break
@@ -107,7 +105,7 @@ func (p *Packet) Mill() (res *miru.LogEvent) {
 }
 
 // ParseChan creates and returns a buffered channel used to capture line input
-func ParseChan(size int, postChan chan *miru.LogEvent) (ch chan *Packet) {
+func ParseChan(size int, postChan chan *MiruLogEvent) (ch chan *Packet) {
 	ch = make(chan *Packet, size)
 
 	go func() {

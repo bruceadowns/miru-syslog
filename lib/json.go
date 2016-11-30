@@ -1,4 +1,4 @@
-package miru
+package lib
 
 import "fmt"
 
@@ -10,8 +10,8 @@ const (
 	LevelWarn = "WARN"
 )
 
-// LogEvent holds the stumptown event
-type LogEvent struct {
+// MiruLogEvent holds the stumptown event
+type MiruLogEvent struct {
 	DataCenter       string   `json:"datacenter,omitempty"`
 	Cluster          string   `json:"cluster,omitempty"`
 	Host             string   `json:"host,omitempty"`
@@ -26,6 +26,6 @@ type LogEvent struct {
 	ThrownStackTrace []string `json:"thrownStackTrace,omitempty"`
 }
 
-func (l *LogEvent) String() string {
+func (l *MiruLogEvent) String() string {
 	return fmt.Sprintf("datacenter: %s - cluster: %s - message: %s", l.DataCenter, l.Cluster, l.Message)
 }
