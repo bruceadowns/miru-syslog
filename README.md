@@ -8,14 +8,10 @@ The syslog protocol is defined via rfc3164 and rfc5424.
 
 ## Endpoints
 
-### Main
-
 * tcp port 514
 * udp port 514
 
 ## Environment Variables
-
-### Miru
 
 * MIRU_SYSLOG_TCP_ADDR_PORT - if empty, do not listen for tcp traffic
 * MIRU_SYSLOG_UDP_ADDR_PORT - if empty, do not listen for udp traffic
@@ -25,7 +21,7 @@ The syslog protocol is defined via rfc3164 and rfc5424.
 * CHANNEL_BUFFER_SIZE_POST - default to 1024
 * UDP_RECEIVE_BUFFER_SIZE - default to 2*1024*1024
 
-Note,
+Note, syslog message size _should not_ exceed 1024 bytes per rfc. Though we default to 2mb.
 
 ## TODO
 
@@ -58,11 +54,9 @@ Note,
 
 ## Test Notes
 
-### Get and run minikube
+### Run minikube
 
 ```
-git clone https://github.com/kubernetes/minikube
-
 minikube start
 minikube ip
 kubectl cluster-info
@@ -104,11 +98,12 @@ export MIRU_SYSLOG_UDP_ADDR_PORT=`minikube ip`:514
 go test -v --run TestUdpClient
 ```
 
-## Reference
+## References
 
 * https://golang.org/
 * https://www.docker.com/
 * http://kubernetes.io/
 * http://kubernetes.io/docs/admin/daemons/
+* https://github.com/kubernetes/minikube
 * https://www.ietf.org/rfc/rfc3164.txt
 * https://www.ietf.org/rfc/rfc5424.txt
