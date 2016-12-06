@@ -27,10 +27,8 @@ Note, syslog message size _should not_ exceed 1024 bytes per rfc. Though we defa
 
 ### technical
 
-* determine event type (syslog, dates, json)
-* parse each event type
-* forward set of MiruLogEvent objects via REST POST
-* cache map[string]string  event type to remote host
+* cache and use event type of each remote host
+* integration testing
 
 ### non-technical
 
@@ -39,6 +37,9 @@ Note, syslog message size _should not_ exceed 1024 bytes per rfc. Though we defa
 
 ### DONE
 
+* determine event type (syslog, dates, json)
+* parse each event type
+* forward set of MiruLogEvent objects via REST POST
 * determine ballpark cost for existing sumologic usage via mako
 * hand off events to parse
 * listen to tcp/udp syslog traffic
