@@ -28,7 +28,7 @@ Note, syslog message size _should not_ exceed 1024 bytes per rfc. Though we defa
 ### technical
 
 * cache and use event type of each remote host
-* integration testing
+* write up hackday wiki
 
 ### non-technical
 
@@ -37,6 +37,7 @@ Note, syslog message size _should not_ exceed 1024 bytes per rfc. Though we defa
 
 ### DONE
 
+* integration testing
 * determine event type (syslog, dates, json)
 * parse each event type
 * forward set of MiruLogEvent objects via REST POST
