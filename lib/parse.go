@@ -65,9 +65,6 @@ func populate(p syslogparser.LogParser) (res *LogEvent) {
 	version := logParts["@version"]
 	if len(version) == 0 {
 		version = logParts["version"]
-		if len(version) == 0 {
-			version = logParts["v"]
-		}
 	}
 
 	message := logParts["message"]
