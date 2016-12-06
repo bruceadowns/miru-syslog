@@ -43,18 +43,18 @@ func (p *Packet) IsValid() bool {
 	return true
 }
 
-type nullParser struct {
+type noopParser struct {
 	host string
 	buff []byte
 }
 
 // Parse ...
-func (p *nullParser) Parse() error {
+func (p *noopParser) Parse() error {
 	return nil
 }
 
 // Dump ...
-func (p *nullParser) Dump() syslogparser.LogParts {
+func (p *noopParser) Dump() syslogparser.LogParts {
 	return syslogparser.LogParts{
 		"hostname": p.host,
 		"message":  string(p.buff),
@@ -184,7 +184,7 @@ func (p *Packet) Mill() (res *LogEvent) {
 		}
 
 		{
-			parser = &nullParser{buff: p.Message, host: p.Address.String()}
+			parser = &noopParser{buff: p.Message, host: p.Address.String()}
 			log.Printf("empty")
 			break
 		}
