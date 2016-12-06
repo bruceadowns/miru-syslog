@@ -38,7 +38,9 @@ func PostChan(size int, addr, url string) (ch chan *LogEvent) {
 			select {
 			case logEvent := <-ch:
 				log.Printf("Send to stumptown: %s", logEvent)
-				logEvent.Post(addr, url)
+				if err := logEvent.Post(addr, url); err != nil {
+					log.Print(err)
+				}
 			}
 		}
 	}()

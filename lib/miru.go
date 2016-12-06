@@ -9,14 +9,6 @@ import (
 	"net/http"
 )
 
-const (
-	// LevelInfo stringizes info log level
-	LevelInfo = "INFO"
-
-	// LevelWarn stringizes warn log level
-	LevelWarn = "WARN"
-)
-
 // LogEvent holds the stumptown event
 type LogEvent struct {
 	DataCenter       string   `json:"datacenter,omitempty"`
@@ -34,7 +26,9 @@ type LogEvent struct {
 }
 
 func (l *LogEvent) String() string {
-	return fmt.Sprintf("datacenter: %s - cluster: %s - message: %s", l.DataCenter, l.Cluster, l.Message)
+	return fmt.Sprintf(
+		"datacenter: %s - cluster: %s - service: %s - message: %s",
+		l.DataCenter, l.Cluster, l.Service, l.Message)
 }
 
 // Post sends a single log event to stumptown

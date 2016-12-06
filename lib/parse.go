@@ -5,8 +5,13 @@ import (
 	"log"
 	"net"
 
+	"github.com/bruceadowns/syslogparser"
+	"github.com/bruceadowns/syslogparser/mako"
 	"github.com/bruceadowns/syslogparser/rfc3164"
+	"github.com/bruceadowns/syslogparser/rfc3164raw"
 	"github.com/bruceadowns/syslogparser/rfc5424"
+	"github.com/bruceadowns/syslogparser/rfc5424raw"
+	"github.com/bruceadowns/syslogparser/syslogmako"
 )
 
 // Packet holds the incoming traffic info
@@ -15,6 +20,8 @@ type Packet struct {
 	Message  []byte
 	LogEvent *LogEvent
 }
+
+var remoteTypeCache = make(map[string]string)
 
 func (p *Packet) String() string {
 	return fmt.Sprintf("Address: %s '%s'", p.Address, p.Message)
@@ -35,51 +42,131 @@ func (p *Packet) IsValid() bool {
 	return true
 }
 
+func populate(p syslogparser.LogParser) (res *LogEvent) {
+	if p == nil {
+		return
+	}
+
+	logParts := p.Dump()
+
+	app := logParts["app_name"]
+	if len(app) == 0 {
+		app = logParts["service_name"]
+	}
+
+	pid := logParts["service_version"]
+	if len(pid) == 0 {
+		pid = logParts["proc_id"]
+		if len(pid) == 0 {
+			pid = logParts["tag"]
+		}
+	}
+
+	version := logParts["@version"]
+	if len(version) == 0 {
+		version = logParts["version"]
+		if len(version) == 0 {
+			version = logParts["v"]
+		}
+	}
+
+	message := logParts["message"]
+	if len(message) == 0 {
+		message = logParts["content"]
+	}
+
+	timestamp := logParts["@timestamp"]
+	if len(timestamp) == 0 {
+		timestamp = logParts["timestamp"]
+	}
+
+	res = &LogEvent{
+		DataCenter: logParts["service_environment"],
+		Cluster:    logParts["service_pipeline"],
+		Host:       logParts["hostname"],
+		Service:    app,
+		Instance:   pid,
+		Version:    version,
+		Level:      logParts["level"],
+		ThreadName: logParts["thread_name"],
+		LoggerName: logParts["logger_name"],
+		Message:    message,
+		Timestamp:  timestamp,
+		//ThrownStackTrace
+	}
+
+	return
+}
+
 // Mill determines message type and parses into a LogEvent
 func (p *Packet) Mill() (res *LogEvent) {
 	log.Printf("%s", p)
 
-	/*
-		{"@timestamp":"2016-11-29T00:01:44.658+00:00","@version":1,"message":"172.16.3.0 - developer [29/Nov/2016:00:01:44 +0000] \"GET /releases HTTP/1.1\" 200 - \"https://cloud-jcx-api.ms-integ.svc.jivehosted.com/ui\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.98 Safari/537.36\" 221","logger_name":"http.request","thread_name":"dw-14717","level":"INFO","level_value":20000,"service_name":"cloud-jcx-api","service_environment":"ms-integ","service_pipeline":"main","service_version":"caaa4f863f114bd697dbd06569fb01f9c8667681"}
-
-		Nov 29 09:10:30 LT-A10-122418 login[32465]: USER_PROCESS: 32465 ttys010
-		Nov 29 17:10:18 ip-10-126-5-155 dhclient[2346]: bound to 10.126.5.155 -- renewal in 1649 seconds.
-
-		2016-11-29T09:11:04.880190-08:00 soa-prime-data1 /usr/sbin/gmetad[2263]: data_thread() got no answer from any [my cluster] datasource
-	*/
+	var parser syslogparser.LogParser
 
 	for {
+		// check cache for known type
+
 		{
-			parser := rfc3164.NewParser(p.Message)
+			parser = mako.NewParser(p.Message, p.Address.String())
 			if err := parser.Parse(); err == nil {
-				res = &LogEvent{}
+				remoteTypeCache[p.Address.String()] = "mako"
+				log.Printf("mako")
 				break
 			}
 		}
 
 		{
-			parser := rfc5424.NewParser(p.Message)
+			parser = syslogmako.NewParser(p.Message)
 			if err := parser.Parse(); err == nil {
-				res = &LogEvent{}
+				remoteTypeCache[p.Address.String()] = "syslogmako"
+				log.Printf("syslogmako")
 				break
 			}
 		}
 
 		{
-			res = &LogEvent{
-				DataCenter: "bad-dc",
-				Cluster:    "bad-cluster",
-				Host:       "bad-host",
-				Service:    "bad-service",
-				Instance:   "bad-instance",
-				Version:    "1.0",
-				Level:      LevelInfo,
-				Message:    fmt.Sprintf("%s", p.Message),
+			parser = rfc5424raw.NewParser(p.Message)
+			if err := parser.Parse(); err == nil {
+				remoteTypeCache[p.Address.String()] = "rfc5424raw"
+				log.Printf("rfc5424raw")
+				break
 			}
-			break
 		}
+
+		{
+			parser = rfc3164raw.NewParser(p.Message)
+			if err := parser.Parse(); err == nil {
+				remoteTypeCache[p.Address.String()] = "rfc3164raw"
+				log.Printf("rfc3164raw")
+				break
+			}
+		}
+
+		{
+			parser = rfc3164.NewParser(p.Message)
+			if err := parser.Parse(); err == nil {
+				remoteTypeCache[p.Address.String()] = "rfc3164"
+				log.Printf("rfc3164")
+				break
+			}
+		}
+
+		{
+			parser = rfc5424.NewParser(p.Message)
+			if err := parser.Parse(); err == nil {
+				remoteTypeCache[p.Address.String()] = "rfc5424"
+				log.Printf("rfc5424")
+				break
+			}
+		}
+
+		log.Printf("none")
+		parser = nil
+		break
 	}
 
+	res = populate(parser)
 	if res == nil {
 		log.Printf("Message from %s not parsed: %s", p.Address, p.Message)
 	} else {

@@ -30,6 +30,7 @@ Note, syslog message size _should not_ exceed 1024 bytes per rfc. Though we defa
 * determine event type (syslog, dates, json)
 * parse each event type
 * forward set of MiruLogEvent objects via REST POST
+* cache map[string]string  event type to remote host
 
 ### non-technical
 
