@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strings"
 
 	"github.com/bruceadowns/syslogparser"
 	"github.com/bruceadowns/syslogparser/mako"
@@ -77,19 +78,25 @@ func populate(p syslogparser.LogParser) (res *LogEvent) {
 		timestamp = logParts["timestamp"]
 	}
 
+	stackTrace := []string{}
+	fullStackTrace := logParts["stack_trace"]
+	if len(fullStackTrace) > 0 {
+		stackTrace = strings.Split(fullStackTrace, "\n")
+	}
+
 	res = &LogEvent{
-		DataCenter: logParts["service_environment"],
-		Cluster:    logParts["service_pipeline"],
-		Host:       logParts["hostname"],
-		Service:    app,
-		Instance:   pid,
-		Version:    version,
-		Level:      logParts["level"],
-		ThreadName: logParts["thread_name"],
-		LoggerName: logParts["logger_name"],
-		Message:    message,
-		Timestamp:  timestamp,
-		//ThrownStackTrace
+		DataCenter:       logParts["service_environment"],
+		Cluster:          logParts["service_pipeline"],
+		Host:             logParts["hostname"],
+		Service:          app,
+		Instance:         pid,
+		Version:          version,
+		Level:            logParts["level"],
+		ThreadName:       logParts["thread_name"],
+		LoggerName:       logParts["logger_name"],
+		Message:          message,
+		Timestamp:        timestamp,
+		ThrownStackTrace: stackTrace,
 	}
 
 	return
