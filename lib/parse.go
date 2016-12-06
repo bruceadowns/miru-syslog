@@ -43,6 +43,24 @@ func (p *Packet) IsValid() bool {
 	return true
 }
 
+type nullParser struct {
+	host string
+	buff []byte
+}
+
+// Parse ...
+func (p *nullParser) Parse() error {
+	return nil
+}
+
+// Dump ...
+func (p *nullParser) Dump() syslogparser.LogParts {
+	return syslogparser.LogParts{
+		"hostname": p.host,
+		"message":  string(p.buff),
+	}
+}
+
 func populate(p syslogparser.LogParser) (res *LogEvent) {
 	if p == nil {
 		return
@@ -165,9 +183,11 @@ func (p *Packet) Mill() (res *LogEvent) {
 			}
 		}
 
-		log.Printf("none")
-		parser = nil
-		break
+		{
+			parser = &nullParser{buff: p.Message, host: p.Address.String()}
+			log.Printf("empty")
+			break
+		}
 	}
 
 	res = populate(parser)
