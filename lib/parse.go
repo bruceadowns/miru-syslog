@@ -22,7 +22,7 @@ type Packet struct {
 	LogEvent *LogEvent
 }
 
-var remoteTypeCache = make(map[string]string)
+var remoteTypeCache = make(map[net.Addr]string)
 
 func (p *Packet) String() string {
 	return fmt.Sprintf("Address: %s '%s'", p.Address, p.Message)
@@ -44,8 +44,12 @@ func (p *Packet) IsValid() bool {
 }
 
 type noopParser struct {
-	host string
 	buff []byte
+	host net.Addr
+}
+
+func newNoopParser(buff []byte, host net.Addr) *noopParser {
+	return &noopParser{buff: buff, host: host}
 }
 
 // Parse ...
@@ -56,8 +60,8 @@ func (p *noopParser) Parse() error {
 // Dump ...
 func (p *noopParser) Dump() syslogparser.LogParts {
 	return syslogparser.LogParts{
-		"hostname": p.host,
 		"message":  string(p.buff),
+		"hostname": p.host.String(),
 	}
 }
 
@@ -120,74 +124,106 @@ func populate(p syslogparser.LogParser) (res *LogEvent) {
 	return
 }
 
+func determineParser(p *Packet) (res syslogparser.LogParser) {
+	res = mako.NewParser(p.Message, p.Address)
+	if err := res.Parse(); err == nil {
+		remoteTypeCache[p.Address] = "mako"
+		log.Printf("%s - %s", p.Address.String(), "mako")
+		return
+	}
+
+	res = syslogmako.NewParser(p.Message)
+	if err := res.Parse(); err == nil {
+		remoteTypeCache[p.Address] = "syslogmako"
+		log.Printf("%s - %s", p.Address.String(), "syslogmako")
+		return
+	}
+
+	res = rfc5424raw.NewParser(p.Message)
+	if err := res.Parse(); err == nil {
+		remoteTypeCache[p.Address] = "rfc5424raw"
+		log.Printf("%s - %s", p.Address.String(), "rfc5424raw")
+		return
+	}
+
+	res = rfc3164raw.NewParser(p.Message)
+	if err := res.Parse(); err == nil {
+		remoteTypeCache[p.Address] = "rfc3164raw"
+		log.Printf("%s - %s", p.Address.String(), "rfc3164raw")
+		return
+	}
+
+	res = rfc3164.NewParser(p.Message)
+	if err := res.Parse(); err == nil {
+		remoteTypeCache[p.Address] = "rfc3164"
+		log.Printf("%s - %s", p.Address.String(), "rfc3164")
+		return
+	}
+
+	res = rfc5424.NewParser(p.Message)
+	if err := res.Parse(); err == nil {
+		remoteTypeCache[p.Address] = "rfc5424"
+		log.Printf("%s - %s", p.Address.String(), "rfc5424")
+		return
+	}
+
+	res = newNoopParser(p.Message, p.Address)
+	log.Printf("%s - %s", p.Address.String(), "noop")
+	return
+}
+
 // Mill determines message type and parses into a LogEvent
 func (p *Packet) Mill() (res *LogEvent) {
 	log.Printf("%s", p)
 
 	var parser syslogparser.LogParser
 
-	for {
-		// check cache for known type
+	switch remoteTypeCache[p.Address] {
 
-		{
-			parser = mako.NewParser(p.Message, p.Address.String())
-			if err := parser.Parse(); err == nil {
-				remoteTypeCache[p.Address.String()] = "mako"
-				log.Printf("mako")
-				break
-			}
+	case "mako":
+		parser = mako.NewParser(p.Message, p.Address)
+		if err := parser.Parse(); err != nil {
+			parser = determineParser(p)
 		}
 
-		{
-			parser = syslogmako.NewParser(p.Message)
-			if err := parser.Parse(); err == nil {
-				remoteTypeCache[p.Address.String()] = "syslogmako"
-				log.Printf("syslogmako")
-				break
-			}
+	case "syslogmako":
+		parser = syslogmako.NewParser(p.Message)
+		if err := parser.Parse(); err != nil {
+			parser = determineParser(p)
 		}
 
-		{
-			parser = rfc5424raw.NewParser(p.Message)
-			if err := parser.Parse(); err == nil {
-				remoteTypeCache[p.Address.String()] = "rfc5424raw"
-				log.Printf("rfc5424raw")
-				break
-			}
+	case "rfc5424raw":
+		parser = rfc5424raw.NewParser(p.Message)
+		if err := parser.Parse(); err != nil {
+			parser = determineParser(p)
 		}
 
-		{
-			parser = rfc3164raw.NewParser(p.Message)
-			if err := parser.Parse(); err == nil {
-				remoteTypeCache[p.Address.String()] = "rfc3164raw"
-				log.Printf("rfc3164raw")
-				break
-			}
+	case "rfc3164raw":
+		parser = rfc3164raw.NewParser(p.Message)
+		if err := parser.Parse(); err != nil {
+			parser = determineParser(p)
 		}
 
-		{
-			parser = rfc3164.NewParser(p.Message)
-			if err := parser.Parse(); err == nil {
-				remoteTypeCache[p.Address.String()] = "rfc3164"
-				log.Printf("rfc3164")
-				break
-			}
+	case "rfc5424":
+		parser = rfc5424.NewParser(p.Message)
+		if err := parser.Parse(); err != nil {
+			parser = determineParser(p)
 		}
 
-		{
-			parser = rfc5424.NewParser(p.Message)
-			if err := parser.Parse(); err == nil {
-				remoteTypeCache[p.Address.String()] = "rfc5424"
-				log.Printf("rfc5424")
-				break
-			}
+	case "rfc3164":
+		parser = rfc3164raw.NewParser(p.Message)
+		if err := parser.Parse(); err != nil {
+			parser = determineParser(p)
 		}
 
-		{
-			parser = &noopParser{buff: p.Message, host: p.Address.String()}
-			log.Printf("empty")
-			break
+	case "noop":
+		parser = newNoopParser(p.Message, p.Address)
+		if err := parser.Parse(); err != nil {
+			parser = determineParser(p)
 		}
+
+	default:
+		parser = determineParser(p)
 	}
 
 	res = populate(parser)

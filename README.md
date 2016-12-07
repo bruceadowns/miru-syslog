@@ -27,16 +27,18 @@ Note, syslog message size _should not_ exceed 1024 bytes per rfc. Though we defa
 
 ### technical
 
-* cache and use event type of each remote host
 * write up hackday wiki
+* batch events for post
 
 ### non-technical
 
+* investigate tokenization options (logstash, etc)
 * determine state of existing log aggregators (ELK) research
 * ballpark hardware/aws cost for hosting miru-stumptown
 
 ### DONE
 
+* cache and use event type of each remote host
 * integration testing
 * determine event type (syslog, dates, json)
 * parse each event type
