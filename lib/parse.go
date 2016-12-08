@@ -183,42 +183,49 @@ func (p *Packet) Mill() (res *LogEvent) {
 	case "mako":
 		parser = mako.NewParser(p.Message, p.Address)
 		if err := parser.Parse(); err != nil {
+			log.Print(err)
 			parser = determineParser(p)
 		}
 
 	case "syslogmako":
 		parser = syslogmako.NewParser(p.Message)
 		if err := parser.Parse(); err != nil {
+			log.Print(err)
 			parser = determineParser(p)
 		}
 
 	case "rfc5424raw":
 		parser = rfc5424raw.NewParser(p.Message)
 		if err := parser.Parse(); err != nil {
+			log.Print(err)
 			parser = determineParser(p)
 		}
 
 	case "rfc3164raw":
 		parser = rfc3164raw.NewParser(p.Message)
 		if err := parser.Parse(); err != nil {
+			log.Print(err)
 			parser = determineParser(p)
 		}
 
 	case "rfc5424":
 		parser = rfc5424.NewParser(p.Message)
 		if err := parser.Parse(); err != nil {
+			log.Print(err)
 			parser = determineParser(p)
 		}
 
 	case "rfc3164":
 		parser = rfc3164raw.NewParser(p.Message)
 		if err := parser.Parse(); err != nil {
+			log.Print(err)
 			parser = determineParser(p)
 		}
 
 	case "noop":
 		parser = newNoopParser(p.Message, p.Address)
 		if err := parser.Parse(); err != nil {
+			log.Print(err)
 			parser = determineParser(p)
 		}
 
