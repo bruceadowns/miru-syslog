@@ -28,7 +28,7 @@ Note, syslog message size _should not_ exceed 1024 bytes per rfc. Though we defa
 ### technical
 
 * write up hackday wiki
-* batch events for post
+* buffer/queue/batch events for post
 
 ### non-technical
 
