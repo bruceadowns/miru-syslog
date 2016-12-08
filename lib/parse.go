@@ -90,6 +90,21 @@ func populate(p syslogparser.LogParser) (res *LogEvent) {
 		version = logParts["version"]
 	}
 
+	level := logParts["level"]
+	if len(level) == 0 {
+		switch logParts["severity"] {
+		case "0", "1", "2", "3":
+			level = "ERROR"
+		case "4":
+			level = "WARN"
+		case "7":
+			level = "DEBUG"
+		//case "5", "6":
+		default:
+			level = "INFO"
+		}
+	}
+
 	message := logParts["message"]
 	if len(message) == 0 {
 		message = logParts["content"]
@@ -113,7 +128,7 @@ func populate(p syslogparser.LogParser) (res *LogEvent) {
 		Service:          app,
 		Instance:         pid,
 		Version:          version,
-		Level:            logParts["level"],
+		Level:            level,
 		ThreadName:       logParts["thread_name"],
 		LoggerName:       logParts["logger_name"],
 		Message:          message,
