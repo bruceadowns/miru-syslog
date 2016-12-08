@@ -33,12 +33,15 @@ Note, syslog message size _should not_ exceed 1024 bytes per rfc. Though we defa
 
 ### non-technical
 
-* investigate tokenization options (logstash, etc)
-* determine state of existing log aggregators (ELK) research
+* detail user story to intake over ssl
+* detail operational story for sustained maintenance
 * ballpark hardware/aws cost for hosting miru-stumptown
+* investigate tokenization options (logstash, etc)
 
 ### DONE
 
+* determine state of existing log aggregators (ELK) research
+* research intake over ssl
 * cache and use event type of each remote host
 * integration testing
 * determine event type (syslog, dates, json)
