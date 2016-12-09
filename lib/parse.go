@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/bruceadowns/syslogparser"
+	"github.com/bruceadowns/syslogparser/journaljson"
+	"github.com/bruceadowns/syslogparser/journalmako"
 	"github.com/bruceadowns/syslogparser/mako"
 	"github.com/bruceadowns/syslogparser/rfc3164"
 	"github.com/bruceadowns/syslogparser/rfc3164raw"
@@ -72,9 +74,9 @@ func populate(p syslogparser.LogParser) (res *LogEvent) {
 
 	logParts := p.Dump()
 
-	app := logParts["app_name"]
+	app := logParts["service_name"]
 	if len(app) == 0 {
-		app = logParts["service_name"]
+		app = logParts["app_name"]
 	}
 
 	pid := logParts["service_version"]
@@ -140,6 +142,23 @@ func populate(p syslogparser.LogParser) (res *LogEvent) {
 }
 
 func determineParser(p *Packet) (res syslogparser.LogParser) {
+	res = journalmako.NewParser(p.Message)
+	if err := res.Parse(); err == nil {
+		remoteTypeCache[p.Address] = "journalmako"
+		log.Printf("%s - %s", p.Address.String(), "journalmako")
+		return
+	} else {
+		log.Print(string(p.Message))
+		log.Print(err)
+	}
+
+	res = journaljson.NewParser(p.Message)
+	if err := res.Parse(); err == nil {
+		remoteTypeCache[p.Address] = "journaljson"
+		log.Printf("%s - %s", p.Address.String(), "journaljson")
+		return
+	}
+
 	res = mako.NewParser(p.Message, p.Address)
 	if err := res.Parse(); err == nil {
 		remoteTypeCache[p.Address] = "mako"

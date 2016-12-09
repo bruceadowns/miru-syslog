@@ -2,6 +2,7 @@ package lib
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -50,9 +51,15 @@ func (l *LogEvent) Post(a, u string) error {
 	}
 	log.Print(buf)
 
-	url := fmt.Sprintf("http://%s%s", a, u)
+	url := fmt.Sprintf("https://%s%s", a, u)
 	log.Print(url)
-	resp, err := http.Post(url, "application/json", buf)
+
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: true}
+	transport := &http.Transport{
+		TLSClientConfig: tlsConfig}
+	client := &http.Client{Transport: transport}
+	resp, err := client.Post(url, "application/json", buf)
 	if err != nil {
 		return err
 	}
