@@ -147,9 +147,6 @@ func determineParser(p *Packet) (res syslogparser.LogParser) {
 		remoteTypeCache[p.Address] = "journalmako"
 		log.Printf("%s - %s", p.Address.String(), "journalmako")
 		return
-	} else {
-		log.Print(string(p.Message))
-		log.Print(err)
 	}
 
 	res = journaljson.NewParser(p.Message)
