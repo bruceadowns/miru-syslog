@@ -1,4 +1,4 @@
-FROM golang:1.7.3
+FROM golang:1.7.4
 MAINTAINER bruce.downs@jivesoftware.com
 
 RUN go get github.com/bruceadowns/miru-syslog
