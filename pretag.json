@@ -1,0 +1,14 @@
+[
+  {
+    "name": "[::1]:51952",
+    "type": "journaljsonmako"
+  },
+  {
+    "name": "[::1]:53695",
+    "type": "makojson"
+  },
+  {
+    "name": "host1",
+    "type": "pretagtype1"
+  }
+]

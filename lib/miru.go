@@ -2,7 +2,6 @@ package lib
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -29,11 +28,14 @@ type LogEvent struct {
 func (l *LogEvent) String() string {
 	return fmt.Sprintf(
 		"datacenter: %s - cluster: %s - service: %s - message: %s",
-		l.DataCenter, l.Cluster, l.Service, l.Message)
+		l.DataCenter, l.Cluster, l.Service, Trunc(l.Message))
 }
 
-// Post sends a single log event to stumptown
-func (l *LogEvent) Post(a, u string) error {
+// LogEvents ...
+type LogEvents []LogEvent
+
+// Post sends log events to stumptown
+func (l *LogEvents) Post(a, u string) error {
 	if len(a) == 0 {
 		log.Print("Stumptown address is empty.")
 		return nil
@@ -43,23 +45,17 @@ func (l *LogEvent) Post(a, u string) error {
 		return nil
 	}
 
-	events := []*LogEvent{l}
-
+	log.Printf("Send %d log events to stumptown.", len(*l))
 	buf := &bytes.Buffer{}
-	if err := json.NewEncoder(buf).Encode(events); err != nil {
+	if err := json.NewEncoder(buf).Encode(l); err != nil {
 		return err
 	}
-	log.Print(buf)
+	log.Printf("Post buffer: %s", Trunc(buf.String()))
 
-	url := fmt.Sprintf("https://%s%s", a, u)
+	url := fmt.Sprintf("http://%s%s", a, u)
 	log.Print(url)
 
-	tlsConfig := &tls.Config{
-		InsecureSkipVerify: true}
-	transport := &http.Transport{
-		TLSClientConfig: tlsConfig}
-	client := &http.Client{Transport: transport}
-	resp, err := client.Post(url, "application/json", buf)
+	resp, err := http.DefaultClient.Post(url, "application/json", buf)
 	if err != nil {
 		return err
 	}

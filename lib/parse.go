@@ -1,38 +1,59 @@
 package lib
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
-	"net"
 	"strings"
-
-	"github.com/bruceadowns/syslogparser"
-	"github.com/bruceadowns/syslogparser/journaljson"
-	"github.com/bruceadowns/syslogparser/journalmako"
-	"github.com/bruceadowns/syslogparser/mako"
-	"github.com/bruceadowns/syslogparser/rfc3164"
-	"github.com/bruceadowns/syslogparser/rfc3164raw"
-	"github.com/bruceadowns/syslogparser/rfc5424"
-	"github.com/bruceadowns/syslogparser/rfc5424raw"
-	"github.com/bruceadowns/syslogparser/syslogmako"
 )
+
+// Parser ...
+type Parser interface {
+	Name() string
+	Extract(hostname string, bb *bytes.Buffer) (map[string]string, error)
+}
+
+// PreTag pretag json
+type PreTag struct {
+	Name, Type string
+}
+
+var typeCache = make(map[string]string)
+
+func init() {
+	if c, err := ioutil.ReadFile("pretag.json"); err == nil {
+		var t []PreTag
+		err = json.Unmarshal(c, &t)
+		if err != nil {
+			log.Fatal("Error unmarshalling pretag.json.", err)
+		}
+
+		for _, v := range t {
+			typeCache[v.Name] = v.Type
+			log.Printf("pretag %s:%s", v.Name, v.Type)
+		}
+	} else {
+		log.Print("Error reading pretag.json.", err)
+	}
+}
 
 // Packet holds the incoming traffic info
 type Packet struct {
-	Address  net.Addr
+	Address  string
 	Message  []byte
 	LogEvent *LogEvent
 }
 
-var remoteTypeCache = make(map[net.Addr]string)
-
 func (p *Packet) String() string {
-	return fmt.Sprintf("Address: %s '%s'", p.Address, p.Message)
+	return fmt.Sprintf("Address: %s '%s'", p.Address,
+		Trunc(string(p.Message)))
 }
 
 // IsValid returns T/F
 func (p *Packet) IsValid() bool {
-	if len(p.Address.String()) == 0 {
+	if len(p.Address) == 0 {
 		log.Print("Address is empty")
 		return false
 	}
@@ -45,231 +66,80 @@ func (p *Packet) IsValid() bool {
 	return true
 }
 
-type noopParser struct {
-	buff []byte
-	host net.Addr
-}
+func (p *Packet) determineParser() (fields map[string]string, err error) {
+	var parser Parser
 
-func newNoopParser(buff []byte, host net.Addr) *noopParser {
-	return &noopParser{buff: buff, host: host}
-}
-
-// Parse ...
-func (p *noopParser) Parse() error {
-	return nil
-}
-
-// Dump ...
-func (p *noopParser) Dump() syslogparser.LogParts {
-	return syslogparser.LogParts{
-		"message":  string(p.buff),
-		"hostname": p.host.String(),
-	}
-}
-
-func populate(p syslogparser.LogParser) (res *LogEvent) {
-	if p == nil {
-		return
-	}
-
-	logParts := p.Dump()
-
-	app := logParts["service_name"]
-	if len(app) == 0 {
-		app = logParts["app_name"]
-	}
-
-	pid := logParts["service_version"]
-	if len(pid) == 0 {
-		pid = logParts["proc_id"]
-		if len(pid) == 0 {
-			pid = logParts["tag"]
+	for {
+		parser = JournalJSONMako{}
+		if fields, err = parser.Extract(p.Address, bytes.NewBuffer(p.Message)); err == nil {
+			typeCache[p.Address] = parser.Name()
+			break
 		}
-	}
 
-	version := logParts["@version"]
-	if len(version) == 0 {
-		version = logParts["version"]
-	}
-
-	level := logParts["level"]
-	if len(level) == 0 {
-		switch logParts["severity"] {
-		case "0", "1", "2", "3":
-			level = "ERROR"
-		case "4":
-			level = "WARN"
-		case "7":
-			level = "DEBUG"
-		//case "5", "6":
-		default:
-			level = "INFO"
+		parser = MakoJSON{}
+		if fields, err = parser.Extract(p.Address, bytes.NewBuffer(p.Message)); err == nil {
+			typeCache[p.Address] = parser.Name()
+			break
 		}
+
+		parser = Base{}
+		fields, err = parser.Extract(p.Address, bytes.NewBuffer(p.Message))
+		break
 	}
 
-	message := logParts["message"]
-	if len(message) == 0 {
-		message = logParts["content"]
+	if err == nil {
+		log.Printf("determined %s - %s", p.Address, parser.Name())
 	}
 
-	timestamp := logParts["@timestamp"]
-	if len(timestamp) == 0 {
-		timestamp = logParts["timestamp"]
-	}
-
-	stackTrace := []string{}
-	fullStackTrace := logParts["stack_trace"]
-	if len(fullStackTrace) > 0 {
-		stackTrace = strings.Split(fullStackTrace, "\n")
-	}
-
-	res = &LogEvent{
-		DataCenter:       logParts["service_environment"],
-		Cluster:          logParts["service_pipeline"],
-		Host:             logParts["hostname"],
-		Service:          app,
-		Instance:         pid,
-		Version:          version,
-		Level:            level,
-		ThreadName:       logParts["thread_name"],
-		LoggerName:       logParts["logger_name"],
-		Message:          message,
-		Timestamp:        timestamp,
-		ThrownStackTrace: stackTrace,
-	}
-
-	return
-}
-
-func determineParser(p *Packet) (res syslogparser.LogParser) {
-	res = journalmako.NewParser(p.Message)
-	if err := res.Parse(); err == nil {
-		remoteTypeCache[p.Address] = "journalmako"
-		log.Printf("%s - %s", p.Address.String(), "journalmako")
-		return
-	}
-
-	res = journaljson.NewParser(p.Message)
-	if err := res.Parse(); err == nil {
-		remoteTypeCache[p.Address] = "journaljson"
-		log.Printf("%s - %s", p.Address.String(), "journaljson")
-		return
-	}
-
-	res = mako.NewParser(p.Message, p.Address)
-	if err := res.Parse(); err == nil {
-		remoteTypeCache[p.Address] = "mako"
-		log.Printf("%s - %s", p.Address.String(), "mako")
-		return
-	}
-
-	res = syslogmako.NewParser(p.Message)
-	if err := res.Parse(); err == nil {
-		remoteTypeCache[p.Address] = "syslogmako"
-		log.Printf("%s - %s", p.Address.String(), "syslogmako")
-		return
-	}
-
-	res = rfc5424raw.NewParser(p.Message)
-	if err := res.Parse(); err == nil {
-		remoteTypeCache[p.Address] = "rfc5424raw"
-		log.Printf("%s - %s", p.Address.String(), "rfc5424raw")
-		return
-	}
-
-	res = rfc3164raw.NewParser(p.Message)
-	if err := res.Parse(); err == nil {
-		remoteTypeCache[p.Address] = "rfc3164raw"
-		log.Printf("%s - %s", p.Address.String(), "rfc3164raw")
-		return
-	}
-
-	res = rfc3164.NewParser(p.Message)
-	if err := res.Parse(); err == nil {
-		remoteTypeCache[p.Address] = "rfc3164"
-		log.Printf("%s - %s", p.Address.String(), "rfc3164")
-		return
-	}
-
-	res = rfc5424.NewParser(p.Message)
-	if err := res.Parse(); err == nil {
-		remoteTypeCache[p.Address] = "rfc5424"
-		log.Printf("%s - %s", p.Address.String(), "rfc5424")
-		return
-	}
-
-	res = newNoopParser(p.Message, p.Address)
-	log.Printf("%s - %s", p.Address.String(), "noop")
 	return
 }
 
 // Mill determines message type and parses into a LogEvent
-func (p *Packet) Mill() (res *LogEvent) {
-	log.Printf("%s", p)
+func (p *Packet) Mill() (res *LogEvent, err error) {
+	log.Printf("Mill packet: %s", p)
 
-	var parser syslogparser.LogParser
+	var fields map[string]string
 
-	switch remoteTypeCache[p.Address] {
-
-	case "mako":
-		parser = mako.NewParser(p.Message, p.Address)
-		if err := parser.Parse(); err != nil {
-			log.Print(err)
-			parser = determineParser(p)
+	switch typeCache[p.Address] {
+	case "journaljsonmako":
+		parser := JournalJSONMako{}
+		if fields, err = parser.Extract(p.Address, bytes.NewBuffer(p.Message)); err != nil {
+			return nil, err
 		}
-
-	case "syslogmako":
-		parser = syslogmako.NewParser(p.Message)
-		if err := parser.Parse(); err != nil {
-			log.Print(err)
-			parser = determineParser(p)
+	case "makojson":
+		parser := MakoJSON{}
+		if fields, err = parser.Extract(p.Address, bytes.NewBuffer(p.Message)); err != nil {
+			return nil, err
 		}
-
-	case "rfc5424raw":
-		parser = rfc5424raw.NewParser(p.Message)
-		if err := parser.Parse(); err != nil {
-			log.Print(err)
-			parser = determineParser(p)
+	case "base":
+		parser := Base{}
+		if fields, err = parser.Extract(p.Address, bytes.NewBuffer(p.Message)); err != nil {
+			return nil, err
 		}
-
-	case "rfc3164raw":
-		parser = rfc3164raw.NewParser(p.Message)
-		if err := parser.Parse(); err != nil {
-			log.Print(err)
-			parser = determineParser(p)
-		}
-
-	case "rfc5424":
-		parser = rfc5424.NewParser(p.Message)
-		if err := parser.Parse(); err != nil {
-			log.Print(err)
-			parser = determineParser(p)
-		}
-
-	case "rfc3164":
-		parser = rfc3164raw.NewParser(p.Message)
-		if err := parser.Parse(); err != nil {
-			log.Print(err)
-			parser = determineParser(p)
-		}
-
-	case "noop":
-		parser = newNoopParser(p.Message, p.Address)
-		if err := parser.Parse(); err != nil {
-			log.Print(err)
-			parser = determineParser(p)
-		}
-
 	default:
-		parser = determineParser(p)
+		if fields, err = p.determineParser(); err != nil {
+			return nil, err
+		}
 	}
 
-	res = populate(parser)
-	if res == nil {
-		log.Printf("Message from %s not parsed: %s", p.Address, p.Message)
-	} else {
-		log.Print(res)
+	stackTrace := []string{}
+	fullStackTrace := fields["stack_trace"]
+	if len(fullStackTrace) > 0 {
+		stackTrace = strings.Split(fullStackTrace, "\n")
 	}
 
-	return
+	return &LogEvent{
+		DataCenter:       fields["service_environment"],
+		Cluster:          fields["service_pipeline"],
+		Host:             fields["hostname"],
+		Service:          fields["service_name"],
+		Instance:         fields["service_version"],
+		Version:          fields["version"],
+		Level:            fields["level"],
+		ThreadName:       fields["thread_name"],
+		LoggerName:       fields["logger_name"],
+		Message:          fields["message"],
+		Timestamp:        fields["timestamp"],
+		ThrownStackTrace: stackTrace,
+	}, nil
 }

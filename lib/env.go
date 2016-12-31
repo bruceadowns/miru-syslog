@@ -40,3 +40,12 @@ func GetEnvInt(name string, def int) (res int) {
 	log.Printf("%s set to %d.", name, res)
 	return
 }
+
+func Trunc(in string) (res string) {
+	res = in
+	if len(res) > 80 {
+		res = res[:80] + "..."
+	}
+
+	return
+}
