@@ -1,10 +1,10 @@
 [
   {
-    "name": "[::1]:51952",
+    "name": "coreos-host",
     "type": "journaljsonmako"
   },
   {
-    "name": "[::1]:53695",
+    "name": "local-host",
     "type": "makojson"
   },
   {
