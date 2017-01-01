@@ -41,6 +41,7 @@ func GetEnvInt(name string, def int) (res int) {
 	return
 }
 
+// Trunc ...
 func Trunc(in string) (res string) {
 	res = in
 	if len(res) > 80 {

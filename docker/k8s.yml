@@ -18,13 +18,16 @@ spec:
           ports:
             - containerPort: 514
               hostPort: 514
-              name: syslogtcpport
               protocol: TCP
           env:
           - name: MIRU_SYSLOG_TCP_ADDR_PORT
             value: :514
           - name: MIRU_STUMPTOWN_ADDR_PORT
-            value: 10.126.5.155:10004
+            value: 10.126.5.155:10008
+          - name: AWS_ACCESS_KEY_ID
+            value: akid
+          - name: AWS_SECRET_ACCESS_KEY
+            value: secretak
           livenessProbe:
             tcpSocket:
               port: 514

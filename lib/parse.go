@@ -15,12 +15,19 @@ type Parser interface {
 	Extract(hostname string, bb *bytes.Buffer) (map[string]string, error)
 }
 
+// Packet holds the incoming traffic info
+type Packet struct {
+	Address  string
+	Message  []byte
+	LogEvent *LogEvent
+}
+
 // PreTag pretag json
 type PreTag struct {
 	Name, Type string
 }
 
-var typeCache = make(map[string]string)
+var hostToTypeCache = make(map[string]string)
 
 func init() {
 	if c, err := ioutil.ReadFile("pretag.json"); err == nil {
@@ -31,7 +38,7 @@ func init() {
 		}
 
 		for _, v := range t {
-			typeCache[v.Name] = v.Type
+			hostToTypeCache[v.Name] = v.Type
 			log.Printf("pretag %s:%s", v.Name, v.Type)
 		}
 	} else {
@@ -39,31 +46,9 @@ func init() {
 	}
 }
 
-// Packet holds the incoming traffic info
-type Packet struct {
-	Address  string
-	Message  []byte
-	LogEvent *LogEvent
-}
-
 func (p *Packet) String() string {
 	return fmt.Sprintf("Address: %s '%s'", p.Address,
 		Trunc(string(p.Message)))
-}
-
-// IsValid returns T/F
-func (p *Packet) IsValid() bool {
-	if len(p.Address) == 0 {
-		log.Print("Address is empty")
-		return false
-	}
-
-	if len(p.Message) == 0 {
-		log.Print("Message is empty")
-		return false
-	}
-
-	return true
 }
 
 func (p *Packet) determineParser() (fields map[string]string, err error) {
@@ -72,13 +57,13 @@ func (p *Packet) determineParser() (fields map[string]string, err error) {
 	for {
 		parser = JournalJSONMako{}
 		if fields, err = parser.Extract(p.Address, bytes.NewBuffer(p.Message)); err == nil {
-			typeCache[p.Address] = parser.Name()
+			hostToTypeCache[p.Address] = parser.Name()
 			break
 		}
 
 		parser = MakoJSON{}
 		if fields, err = parser.Extract(p.Address, bytes.NewBuffer(p.Message)); err == nil {
-			typeCache[p.Address] = parser.Name()
+			hostToTypeCache[p.Address] = parser.Name()
 			break
 		}
 
@@ -96,11 +81,18 @@ func (p *Packet) determineParser() (fields map[string]string, err error) {
 
 // Mill determines message type and parses into a LogEvent
 func (p *Packet) Mill() (res *LogEvent, err error) {
+	if len(p.Address) == 0 {
+		return nil, fmt.Errorf("Address is empty")
+	}
+	if len(p.Message) == 0 {
+		return nil, fmt.Errorf("Address is empty")
+	}
+
 	log.Printf("Mill packet: %s", p)
 
 	var fields map[string]string
 
-	switch typeCache[p.Address] {
+	switch hostToTypeCache[p.Address] {
 	case "journaljsonmako":
 		parser := JournalJSONMako{}
 		if fields, err = parser.Extract(p.Address, bytes.NewBuffer(p.Message)); err != nil {

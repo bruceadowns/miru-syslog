@@ -14,6 +14,11 @@ type JournalJSONMako struct {
 	makoJSON    MakoJSON
 }
 
+// Name ...
+func (p JournalJSONMako) Name() string {
+	return "journaljsonmako"
+}
+
 // Extract ...
 func (p JournalJSONMako) Extract(hn string, bb *bytes.Buffer) (res map[string]string, err error) {
 	replacer := strings.NewReplacer(
@@ -97,9 +102,4 @@ func (p JournalJSONMako) Extract(hn string, bb *bytes.Buffer) (res map[string]st
 		"timestamp":           timestamp,
 		"version":             version,
 	}, nil
-}
-
-// Name ...
-func (p JournalJSONMako) Name() string {
-	return "journaljsonmako"
 }

@@ -28,6 +28,11 @@ type MakoJSON struct {
 // global const in order to compile once
 var reVersionStrung = regexp.MustCompile("\"version\":\"[0-9.]+\"")
 
+// Name ...
+func (p MakoJSON) Name() string {
+	return "makojson"
+}
+
 // Extract ...
 func (p MakoJSON) Extract(hostname string, bb *bytes.Buffer) (res map[string]string, err error) {
 	replacer := strings.NewReplacer(
@@ -69,9 +74,4 @@ func (p MakoJSON) Extract(hostname string, bb *bytes.Buffer) (res map[string]str
 		"timestamp":           timestamp,
 		"version":             strconv.Itoa(p.Version),
 	}, nil
-}
-
-// Name ...
-func (p MakoJSON) Name() string {
-	return "makojson"
 }
