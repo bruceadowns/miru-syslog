@@ -10,14 +10,25 @@ It is written in golang, housed in a docker container, deployed as a DaemonSet i
 
 ## Environment Variables
 
-* MIRU_SYSLOG_TCP_ADDR_PORT - required
-* MIRU_STUMPTOWN_ADDR_PORT - if empty, do not post to stumptown
+* MIRU_SYSLOG_TCP_ADDR_PORT - required to listen for traffic
+* MIRU_STUMPTOWN_ADDR_PORT - required to post to stumptown
 * MIRU_STUMPTOWN_INTAKE_URL - default to /miru/stumptown/intake
+
 * CHANNEL_BUFFER_SIZE_PARSE - default to 1024
-* CHANNEL_BUFFER_SIZE_ACCUM - default to 1024
-* CHANNEL_BUFFER_SIZE_POST - default to 1024
-* CHANNEL_BUFFER_ACCUM_BATCH - default to 1000
-* CHANNEL_BUFFER_ACCUM_DELAY_MS - default to 100
+* CHANNEL_BUFFER_SIZE_MIRU_ACCUM - default to 1024
+* CHANNEL_BUFFER_SIZE_MIRU_POST - default to 1024
+* CHANNEL_BUFFER_MIRU_ACCUM_BATCH - default to 1000
+* CHANNEL_BUFFER_MIRU_ACCUM_DELAY_MS - default to 100
+
+* CHANNEL_BUFFER_SIZE_S3_ACCUM - default to 1000
+* CHANNEL_BUFFER_SIZE_S3_POST - default to 1000
+* CHANNEL_BUFFER_S3_ACCUM_BATCH_BYTES - default to 10Mb
+* CHANNEL_BUFFER_S3_ACCUM_DELAY_MS - default to 1d
+
+* AWS_REGION - default to us-west-2
+* AWS_S3_BUCKET_NAME - default to miru-syslog
+* AWS_ACCESS_KEY_ID - required to post to S3
+* AWS_SECRET_ACCESS_KEY - required to post to S3
 
 ## Test Notes
 

@@ -5,11 +5,6 @@ import (
 	"compress/gzip"
 	"log"
 	"time"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
 // SwitchBoard ...
@@ -120,7 +115,7 @@ func S3AccumChan(size, batchBytes int, delay time.Duration, s3PostChan chan byte
 				}
 
 			case p := <-ch:
-				log.Printf("Accumulate packet for S3: %s", p)
+				log.Printf("Accumulate (gzip) packet for S3: %s", p)
 				gw.Write(p.Message)
 
 				if bb.Len() >= batchBytes {
@@ -140,7 +135,7 @@ func S3AccumChan(size, batchBytes int, delay time.Duration, s3PostChan chan byte
 }
 
 // S3PostChan ...
-func S3PostChan(size int, awsRegion, s3Bucket, awsAccessKeyID, awsSecretAccessKey string) (ch chan bytes.Buffer) {
+func S3PostChan(size int, a AWSInfo) (ch chan bytes.Buffer) {
 	ch = make(chan bytes.Buffer, size)
 
 	go func() {
@@ -148,24 +143,7 @@ func S3PostChan(size int, awsRegion, s3Bucket, awsAccessKeyID, awsSecretAccessKe
 			select {
 			case bb := <-ch:
 				log.Printf("Send %d bytes to S3", bb.Len())
-				if bb.Len() > 0 {
-					uploader := s3manager.NewUploader(
-						session.New(&aws.Config{
-							Region:      aws.String(awsRegion),
-							Credentials: credentials.NewStaticCredentials(awsAccessKeyID, awsSecretAccessKey, "")}))
-
-					awsKey := aws.String(time.Now().Format(time.RFC3339Nano) + ".gz")
-					result, err := uploader.Upload(&s3manager.UploadInput{
-						Body:   bytes.NewReader(bb.Bytes()),
-						Bucket: aws.String(s3Bucket),
-						Key:    awsKey,
-					})
-					if err == nil {
-						log.Printf("S3 Location: %s", result.Location)
-					} else {
-						log.Printf("Error posting to S3 %s", err)
-					}
-				}
+				PostS3(bb, a)
 			}
 		}
 	}()

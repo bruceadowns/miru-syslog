@@ -96,18 +96,31 @@ func (p *Packet) Mill() (res *LogEvent, err error) {
 	case "journaljsonmako":
 		parser := JournalJSONMako{}
 		if fields, err = parser.Extract(p.Address, bytes.NewBuffer(p.Message)); err != nil {
-			return nil, err
+			log.Printf("Error parsing %s [%s]", parser.Name(), err)
+
+			parser := Base{}
+			if fields, err = parser.Extract(p.Address, bytes.NewBuffer(p.Message)); err != nil {
+				return nil, err
+			}
 		}
+
 	case "makojson":
 		parser := MakoJSON{}
 		if fields, err = parser.Extract(p.Address, bytes.NewBuffer(p.Message)); err != nil {
-			return nil, err
+			log.Printf("Error parsing %s [%s]", parser.Name(), err)
+
+			parser := Base{}
+			if fields, err = parser.Extract(p.Address, bytes.NewBuffer(p.Message)); err != nil {
+				return nil, err
+			}
 		}
+
 	case "base":
 		parser := Base{}
 		if fields, err = parser.Extract(p.Address, bytes.NewBuffer(p.Message)); err != nil {
 			return nil, err
 		}
+
 	default:
 		if fields, err = p.determineParser(); err != nil {
 			return nil, err

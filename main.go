@@ -28,7 +28,7 @@ type miruEnv struct {
 	channelBufferSizeS3Post        int
 
 	awsRegion          string
-	s3BucketName       string
+	s3Bucket           string
 	awsAccessKeyID     string
 	awsSecretAccessKey string
 }
@@ -107,16 +107,16 @@ func init() {
 	activeMiruEnv.channelBufferSizeParse = lib.GetEnvInt("CHANNEL_BUFFER_SIZE_PARSE", 1024)
 	activeMiruEnv.channelBufferSizeMiruAccum = lib.GetEnvInt("CHANNEL_BUFFER_SIZE_MIRU_ACCUM", 1024)
 	activeMiruEnv.channelBufferSizeMiruPost = lib.GetEnvInt("CHANNEL_BUFFER_SIZE_MIRU_POST", 1024)
-	activeMiruEnv.channelBufferMiruAccumBatch = lib.GetEnvInt("CHANNEL_BUFFER_MIRU_ACCUM_BATCH", 1000)
+	activeMiruEnv.channelBufferMiruAccumBatch = lib.GetEnvInt("CHANNEL_BUFFER_MIRU_ACCUM_BATCH", 1024)
 	activeMiruEnv.channelBufferMiruAccumDelayMs = lib.GetEnvInt("CHANNEL_BUFFER_MIRU_ACCUM_DELAY_MS", 100)
 
 	activeMiruEnv.channelBufferSizeS3Accum = lib.GetEnvInt("CHANNEL_BUFFER_SIZE_S3_ACCUM", 1024)
 	activeMiruEnv.channelBufferSizeS3Post = lib.GetEnvInt("CHANNEL_BUFFER_SIZE_S3_POST", 1024)
-	activeMiruEnv.channelBufferS3AccumBatchBytes = lib.GetEnvInt("CHANNEL_BUFFER_S3_ACCUM_BATCH_BYTES", 1024*1024)
+	activeMiruEnv.channelBufferS3AccumBatchBytes = lib.GetEnvInt("CHANNEL_BUFFER_S3_ACCUM_BATCH_BYTES", 10*1024*1024)
 	activeMiruEnv.channelBufferS3AccumDelayMs = lib.GetEnvInt("CHANNEL_BUFFER_S3_ACCUM_DELAY_MS", 24*60*60*1000*100)
 
-	activeMiruEnv.awsRegion = lib.GetEnvStr("AWS_REGION", "")
-	activeMiruEnv.s3BucketName = lib.GetEnvStr("AWS_S3_BUCKET_NAME", "")
+	activeMiruEnv.awsRegion = lib.GetEnvStr("AWS_REGION", "us-west-2")
+	activeMiruEnv.s3Bucket = lib.GetEnvStr("AWS_S3_BUCKET_NAME", "miru-syslog")
 	activeMiruEnv.awsAccessKeyID = lib.GetEnvStr("AWS_ACCESS_KEY_ID", "")
 	activeMiruEnv.awsSecretAccessKey = lib.GetEnvStr("AWS_SECRET_ACCESS_KEY", "")
 }
@@ -139,10 +139,11 @@ func initChannels() {
 
 	sb.S3PostChan = lib.S3PostChan(
 		activeMiruEnv.channelBufferSizeS3Post,
-		activeMiruEnv.awsRegion,
-		activeMiruEnv.s3BucketName,
-		activeMiruEnv.awsAccessKeyID,
-		activeMiruEnv.awsSecretAccessKey)
+		lib.AWSInfo{
+			AwsRegion:          activeMiruEnv.awsRegion,
+			S3Bucket:           activeMiruEnv.s3Bucket,
+			AwsAccessKeyID:     activeMiruEnv.awsAccessKeyID,
+			AwsSecretAccessKey: activeMiruEnv.awsSecretAccessKey})
 
 	sb.S3AccumChan = lib.S3AccumChan(
 		activeMiruEnv.channelBufferSizeS3Accum,
