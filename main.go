@@ -50,8 +50,8 @@ func handleTCPConnection(c net.Conn) {
 		if err == nil {
 			p := &lib.Packet{Address: c.RemoteAddr().String(), Message: line}
 			log.Printf("Read tcp buffer: %s", p)
-			sb.ParseChan <- *p
-			sb.S3AccumChan <- *p
+			sb.ParseChan <- p
+			sb.S3AccumChan <- p
 		} else if err == io.EOF {
 			if len(line) > 0 {
 				log.Fatal("Unexpected buffer on EOF")

@@ -14,17 +14,17 @@ import (
 
 // SwitchBoard ...
 type SwitchBoard struct {
-	ParseChan     chan Packet
-	MiruAccumChan chan LogEvent
+	ParseChan     chan *Packet
+	MiruAccumChan chan *LogEvent
 	MiruPostChan  chan LogEvents
 
-	S3AccumChan chan Packet
+	S3AccumChan chan *Packet
 	S3PostChan  chan bytes.Buffer
 }
 
 // ParseChan creates and returns a buffered channel used to capture line input
-func ParseChan(size int, accumChan chan LogEvent) (ch chan Packet) {
-	ch = make(chan Packet, size)
+func ParseChan(size int, accumChan chan *LogEvent) (ch chan *Packet) {
+	ch = make(chan *Packet, size)
 
 	go func() {
 		for {
@@ -36,7 +36,7 @@ func ParseChan(size int, accumChan chan LogEvent) (ch chan Packet) {
 					log.Printf("Error parsing message: [%s] [%s]", p, err)
 				} else {
 					log.Printf("Send log event to miru accumulator: [%s]", e)
-					accumChan <- *e
+					accumChan <- e
 				}
 			}
 		}
@@ -46,8 +46,8 @@ func ParseChan(size int, accumChan chan LogEvent) (ch chan Packet) {
 }
 
 // MiruAccumChan creates and returns a buffered channel used to accumulate events
-func MiruAccumChan(size int, batchSize int, delay time.Duration, postChan chan LogEvents) (ch chan LogEvent) {
-	ch = make(chan LogEvent, size)
+func MiruAccumChan(size int, batchSize int, delay time.Duration, postChan chan LogEvents) (ch chan *LogEvent) {
+	ch = make(chan *LogEvent, size)
 
 	go func() {
 		var logEvents LogEvents
@@ -63,7 +63,7 @@ func MiruAccumChan(size int, batchSize int, delay time.Duration, postChan chan L
 
 			case e := <-ch:
 				log.Printf("Accumulate log event for miru: %s", e)
-				logEvents = append(logEvents, e)
+				logEvents = append(logEvents, *e)
 
 				if len(logEvents) >= batchSize {
 					log.Printf("Post log events to miru: %d", len(logEvents))
@@ -99,8 +99,8 @@ func MiruPostChan(size int, addr, url string) (ch chan LogEvents) {
 }
 
 // S3AccumChan ...
-func S3AccumChan(size, batchBytes int, delay time.Duration, s3PostChan chan bytes.Buffer) (ch chan Packet) {
-	ch = make(chan Packet, size)
+func S3AccumChan(size, batchBytes int, delay time.Duration, s3PostChan chan bytes.Buffer) (ch chan *Packet) {
+	ch = make(chan *Packet, size)
 
 	go func() {
 		bb := bytes.Buffer{}
