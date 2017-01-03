@@ -81,12 +81,13 @@ func MiruPostChan(size int, addr, url string) (ch chan LogEvents) {
 	ch = make(chan LogEvents, size)
 
 	go func() {
-		t := 0
+		t, tl := 0, 0
 		for {
 			select {
 			case logEvents := <-ch:
 				t++
-				log.Printf("Send %d events to stumptown [%d]", len(logEvents), t)
+				tl += len(logEvents)
+				log.Printf("Send %d events to stumptown [%d - %d]", len(logEvents), t, tl)
 				if len(logEvents) > 0 {
 					if err := logEvents.Post(addr, url); err != nil {
 						log.Print(err)
@@ -104,7 +105,7 @@ func S3AccumChan(size, batchBytes int, delay time.Duration, s3PostChan chan byte
 	ch = make(chan *Packet, size)
 
 	go func() {
-		t := 0
+		t, tl := 0, 0
 		bb := bytes.Buffer{}
 		gw := gzip.NewWriter(&bb)
 
@@ -122,8 +123,9 @@ func S3AccumChan(size, batchBytes int, delay time.Duration, s3PostChan chan byte
 				}
 
 			case p := <-ch:
-				t += len(p.Message)
-				log.Printf("Accumulate (gzip) packet [%d] for S3: %s", t, p)
+				t++
+				tl += len(p.Message)
+				log.Printf("Accumulate (gzip) packet [%d - %d] for S3: %s", t, tl, p)
 				gw.Write(p.Message)
 
 				if bb.Len() >= batchBytes {

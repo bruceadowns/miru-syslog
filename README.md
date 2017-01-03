@@ -17,7 +17,7 @@ It is written in golang, housed in a docker container, deployed as a DaemonSet i
 * CHANNEL_BUFFER_SIZE_MIRU_ACCUM - default to 1024
 * CHANNEL_BUFFER_SIZE_MIRU_POST - default to 1024
 * CHANNEL_BUFFER_MIRU_ACCUM_BATCH - default to 1000
-* CHANNEL_BUFFER_MIRU_ACCUM_DELAY_MS - default to 100
+* CHANNEL_BUFFER_MIRU_ACCUM_DELAY_MS - default to 1000
 * CHANNEL_BUFFER_SIZE_S3_ACCUM - default to 1000
 * CHANNEL_BUFFER_SIZE_S3_POST - default to 1000
 * CHANNEL_BUFFER_S3_ACCUM_BATCH_BYTES - default to 10Mb

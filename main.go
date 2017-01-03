@@ -105,7 +105,7 @@ func init() {
 	activeMiruEnv.channelBufferSizeMiruAccum = lib.GetEnvInt("CHANNEL_BUFFER_SIZE_MIRU_ACCUM", 1024)
 	activeMiruEnv.channelBufferSizeMiruPost = lib.GetEnvInt("CHANNEL_BUFFER_SIZE_MIRU_POST", 1024)
 	activeMiruEnv.channelBufferMiruAccumBatch = lib.GetEnvInt("CHANNEL_BUFFER_MIRU_ACCUM_BATCH", 1024)
-	activeMiruEnv.channelBufferMiruAccumDelayMs = lib.GetEnvInt("CHANNEL_BUFFER_MIRU_ACCUM_DELAY_MS", 100)
+	activeMiruEnv.channelBufferMiruAccumDelayMs = lib.GetEnvInt("CHANNEL_BUFFER_MIRU_ACCUM_DELAY_MS", 1000)
 
 	activeMiruEnv.channelBufferSizeS3Accum = lib.GetEnvInt("CHANNEL_BUFFER_SIZE_S3_ACCUM", 1024)
 	activeMiruEnv.channelBufferSizeS3Post = lib.GetEnvInt("CHANNEL_BUFFER_SIZE_S3_POST", 1024)
