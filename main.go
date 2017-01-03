@@ -27,10 +27,7 @@ type miruEnv struct {
 	channelBufferSizeS3Accum       int
 	channelBufferSizeS3Post        int
 
-	awsRegion          string
-	s3Bucket           string
-	awsAccessKeyID     string
-	awsSecretAccessKey string
+	awsInfo lib.AWSInfo
 }
 
 var (
@@ -54,7 +51,7 @@ func handleTCPConnection(c net.Conn) {
 			sb.S3AccumChan <- p
 		} else if err == io.EOF {
 			if len(line) > 0 {
-				log.Fatal("Unexpected buffer on EOF")
+				log.Printf("Unexpected (ignore) buffer on EOF %s", line)
 			}
 
 			log.Print("tcp buffer EOF")
@@ -115,13 +112,16 @@ func init() {
 	activeMiruEnv.channelBufferS3AccumBatchBytes = lib.GetEnvInt("CHANNEL_BUFFER_S3_ACCUM_BATCH_BYTES", 10*1024*1024)
 	activeMiruEnv.channelBufferS3AccumDelayMs = lib.GetEnvInt("CHANNEL_BUFFER_S3_ACCUM_DELAY_MS", 24*60*60*1000*100)
 
-	activeMiruEnv.awsRegion = lib.GetEnvStr("AWS_REGION", "us-west-2")
-	activeMiruEnv.s3Bucket = lib.GetEnvStr("AWS_S3_BUCKET_NAME", "miru-syslog")
-	activeMiruEnv.awsAccessKeyID = lib.GetEnvStr("AWS_ACCESS_KEY_ID", "")
-	activeMiruEnv.awsSecretAccessKey = lib.GetEnvStr("AWS_SECRET_ACCESS_KEY", "")
+	activeMiruEnv.awsInfo = lib.AWSInfo{
+		AwsRegion:          lib.GetEnvStr("AWS_REGION", "us-west-2"),
+		S3Bucket:           lib.GetEnvStr("AWS_S3_BUCKET_NAME", "miru-syslog"),
+		AwsAccessKeyID:     lib.GetEnvStr("AWS_ACCESS_KEY_ID", ""),
+		AwsSecretAccessKey: lib.GetEnvStr("AWS_SECRET_ACCESS_KEY", "")}
 }
 
 func initChannels() {
+	log.Print("Initialize channels")
+
 	sb.MiruPostChan = lib.MiruPostChan(
 		activeMiruEnv.channelBufferSizeMiruPost,
 		activeMiruEnv.stumptownAddress,
@@ -139,11 +139,7 @@ func initChannels() {
 
 	sb.S3PostChan = lib.S3PostChan(
 		activeMiruEnv.channelBufferSizeS3Post,
-		lib.AWSInfo{
-			AwsRegion:          activeMiruEnv.awsRegion,
-			S3Bucket:           activeMiruEnv.s3Bucket,
-			AwsAccessKeyID:     activeMiruEnv.awsAccessKeyID,
-			AwsSecretAccessKey: activeMiruEnv.awsSecretAccessKey})
+		activeMiruEnv.awsInfo)
 
 	sb.S3AccumChan = lib.S3AccumChan(
 		activeMiruEnv.channelBufferSizeS3Accum,
@@ -152,11 +148,19 @@ func initChannels() {
 		sb.S3PostChan)
 }
 
+func initS3() {
+	log.Print("Initialize AWS S3")
+
+	if err := lib.InitS3(activeMiruEnv.awsInfo); err != nil {
+		log.Printf("Error initializing S3 (bucket) %s", err)
+	}
+}
+
 func main() {
 	var wg sync.WaitGroup
 
-	log.Print("Initialize channels")
 	go initChannels()
+	go initS3()
 
 	log.Print("Start tcp pump")
 	tcpMessagePump(&wg)

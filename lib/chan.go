@@ -22,10 +22,12 @@ func ParseChan(size int, accumChan chan *LogEvent) (ch chan *Packet) {
 	ch = make(chan *Packet, size)
 
 	go func() {
+		t := 0
 		for {
 			select {
 			case p := <-ch:
-				log.Printf("Parse message: [%s]", p)
+				t++
+				log.Printf("Parse message [%d]: %s", t, p)
 
 				if e, err := p.Mill(); err != nil {
 					log.Printf("Error parsing message: [%s] [%s]", p, err)
@@ -45,6 +47,7 @@ func MiruAccumChan(size int, batchSize int, delay time.Duration, postChan chan L
 	ch = make(chan *LogEvent, size)
 
 	go func() {
+		t := 0
 		var logEvents LogEvents
 
 		for {
@@ -57,7 +60,8 @@ func MiruAccumChan(size int, batchSize int, delay time.Duration, postChan chan L
 				}
 
 			case e := <-ch:
-				log.Printf("Accumulate log event for miru: %s", e)
+				t++
+				log.Printf("Accumulate log event [%d] for miru: %s", t, e)
 				logEvents = append(logEvents, *e)
 
 				if len(logEvents) >= batchSize {
@@ -77,10 +81,12 @@ func MiruPostChan(size int, addr, url string) (ch chan LogEvents) {
 	ch = make(chan LogEvents, size)
 
 	go func() {
+		t := 0
 		for {
 			select {
 			case logEvents := <-ch:
-				log.Printf("Send %d events to stumptown", len(logEvents))
+				t++
+				log.Printf("Send %d events to stumptown [%d]", len(logEvents), t)
 				if len(logEvents) > 0 {
 					if err := logEvents.Post(addr, url); err != nil {
 						log.Print(err)
@@ -98,6 +104,7 @@ func S3AccumChan(size, batchBytes int, delay time.Duration, s3PostChan chan byte
 	ch = make(chan *Packet, size)
 
 	go func() {
+		t := 0
 		bb := bytes.Buffer{}
 		gw := gzip.NewWriter(&bb)
 
@@ -115,7 +122,8 @@ func S3AccumChan(size, batchBytes int, delay time.Duration, s3PostChan chan byte
 				}
 
 			case p := <-ch:
-				log.Printf("Accumulate (gzip) packet for S3: %s", p)
+				t += len(p.Message)
+				log.Printf("Accumulate (gzip) packet [%d] for S3: %s", t, p)
 				gw.Write(p.Message)
 
 				if bb.Len() >= batchBytes {
@@ -139,10 +147,13 @@ func S3PostChan(size int, a AWSInfo) (ch chan bytes.Buffer) {
 	ch = make(chan bytes.Buffer, size)
 
 	go func() {
+		t, tl := 0, 0
 		for {
 			select {
 			case bb := <-ch:
-				log.Printf("Send %d bytes to S3", bb.Len())
+				t++
+				tl += bb.Len()
+				log.Printf("Send %d bytes to S3. [%d - %d]", bb.Len(), t, tl)
 				PostS3(bb, a)
 			}
 		}
