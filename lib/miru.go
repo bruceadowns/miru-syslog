@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -36,15 +37,15 @@ func (l *LogEvent) String() string {
 type LogEvents []LogEvent
 
 // helper post function to facilitate retry
-func doPost(u string, bb *bytes.Buffer) error {
-	resp, err := http.DefaultClient.Post(u, "application/json", bb)
+func doPost(u string, r io.Reader) error {
+	resp, err := http.Post(u, "application/json", r)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusAccepted {
-		return fmt.Errorf("Invalid status code [%d] posting to %s", resp.StatusCode, u)
+		return fmt.Errorf("Invalid status code: %d", resp.StatusCode)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
@@ -73,13 +74,13 @@ func (l *LogEvents) Post(a, u string, delaySuccess, delayError time.Duration) er
 	if err := json.NewEncoder(buf).Encode(l); err != nil {
 		return err
 	}
-	log.Printf("Post buffer: %s", Trunc(buf.String()))
 
 	url := fmt.Sprintf("http://%s%s", a, u)
-	log.Print(url)
+	log.Printf("Intake URL: %s", url)
 
 	for {
-		err := doPost(url, buf)
+		log.Printf("Post buffer: %s", Trunc(buf.String()))
+		err := doPost(url, bytes.NewReader(buf.Bytes()))
 		if err == nil {
 			if delaySuccess > 0 {
 				log.Printf("Miru delay on success %dms", delaySuccess)
