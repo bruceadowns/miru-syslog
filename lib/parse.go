@@ -27,22 +27,37 @@ type PreTag struct {
 	Name, Type string
 }
 
+// IsValid ...
+func (pt PreTag) IsValid() bool {
+	if pt.Name == "" {
+		return false
+	}
+	if pt.Type == "" {
+		return false
+	}
+
+	return true
+}
+
 var hostToTypeCache = make(map[string]string)
 
 func init() {
 	if c, err := ioutil.ReadFile("pretag.json"); err == nil {
-		var t []PreTag
-		err = json.Unmarshal(c, &t)
-		if err != nil {
-			log.Printf("Error unmarshalling pretag.json: %s", err)
-		}
-
-		for _, v := range t {
-			hostToTypeCache[v.Name] = v.Type
-			log.Printf("pretag %s:%s", v.Name, v.Type)
+		var pt []PreTag
+		if err = json.Unmarshal(c, &pt); err == nil {
+			for _, v := range pt {
+				if v.IsValid() {
+					hostToTypeCache[v.Name] = v.Type
+					log.Printf("pretag: [%s:%s]", v.Name, v.Type)
+				} else {
+					log.Printf("Invalid pretag: [%s:%s]", v.Name, v.Type)
+				}
+			}
+		} else {
+			log.Fatalf("Error unmarshalling pretag.json: %s", err)
 		}
 	} else {
-		log.Printf("Error reading pretag.json: %s", err)
+		log.Print(err)
 	}
 }
 
