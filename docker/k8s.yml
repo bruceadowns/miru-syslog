@@ -31,3 +31,5 @@ spec:
           livenessProbe:
             tcpSocket:
               port: 514
+            initialDelaySeconds: 10
+            timeoutSeconds: 5

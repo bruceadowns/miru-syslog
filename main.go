@@ -76,7 +76,7 @@ func tcpMessagePump(wg *sync.WaitGroup) {
 		defer wg.Done()
 
 		if activeMiruEnv.tcpListenAddress == "" {
-			log.Printf("Not listening for for tcp traffic")
+			log.Printf("Not listening for tcp traffic")
 			return
 		}
 
