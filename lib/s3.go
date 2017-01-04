@@ -36,30 +36,27 @@ func InitS3(a AWSInfo) error {
 	awsSession = session.New(&aws.Config{
 		Region:      aws.String(a.AwsRegion),
 		Credentials: credentials.NewStaticCredentials(a.AwsAccessKeyID, a.AwsSecretAccessKey, "")})
-	if awsSession == nil {
-		log.Fatal("Error occurred initializing aws session")
-	}
 
 	s3Session := s3.New(awsSession)
 
-	listResults, err := s3Session.ListBuckets(&s3.ListBucketsInput{})
+	rs, err := s3Session.ListBuckets(&s3.ListBucketsInput{})
 	if err != nil {
 		awsSession = nil
 
 		return fmt.Errorf("Failed to list buckets: %s", err)
 	}
 
-	foundBucket := false
-	for _, b := range listResults.Buckets {
+	found := false
+	for _, b := range rs.Buckets {
 		log.Printf("Found bucket: %s", aws.StringValue(b.Name))
 		if strings.EqualFold(aws.StringValue(b.Name), a.S3Bucket) {
-			foundBucket = true
+			found = true
 			//break
 		}
 	}
 
-	if !foundBucket {
-		createResult, err := s3Session.CreateBucket(
+	if !found {
+		r, err := s3Session.CreateBucket(
 			&s3.CreateBucketInput{Bucket: &a.S3Bucket})
 		if err != nil {
 			awsSession = nil
@@ -67,10 +64,7 @@ func InitS3(a AWSInfo) error {
 			log.Printf("Failed to create bucket: %s", err)
 			return err
 		}
-		if createResult == nil {
-			log.Fatal("Create bucket result is empty")
-		}
-		log.Printf("Created bucket: %s", aws.StringValue(createResult.Location))
+		log.Printf("Created bucket: %s", aws.StringValue(r.Location))
 
 		if err := s3Session.WaitUntilBucketExists(&s3.HeadBucketInput{Bucket: &a.S3Bucket}); err != nil {
 			awsSession = nil
@@ -104,10 +98,6 @@ func PostS3(bb bytes.Buffer, a AWSInfo, delaySuccess, delayError time.Duration) 
 			Key:    aws.String(awsKey),
 		})
 		if err == nil {
-			if r == nil {
-				log.Fatal("Nil S3 result")
-			}
-
 			log.Printf("S3 Location: %s", r.Location)
 
 			if delaySuccess > 0 {

@@ -34,7 +34,7 @@ func init() {
 		var t []PreTag
 		err = json.Unmarshal(c, &t)
 		if err != nil {
-			log.Fatal("Error unmarshalling pretag.json.", err)
+			log.Printf("Error unmarshalling pretag.json: %s", err)
 		}
 
 		for _, v := range t {

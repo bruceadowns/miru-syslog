@@ -49,7 +49,8 @@ func doPost(u string, bb *bytes.Buffer) error {
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal("Unexpected error reading accepted post", err)
+		log.Printf("Unexpected error reading accepted post: %s", err)
+		//return err
 	}
 
 	log.Printf("Response: %d '%s'", resp.StatusCode, body)
