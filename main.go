@@ -63,7 +63,7 @@ func handleTCPConnection(c net.Conn) {
 			log.Print("tcp buffer EOF")
 			break
 		} else {
-			log.Print(err)
+			log.Printf("Error reading bytes from channel: %s", err)
 			break
 		}
 	}
@@ -75,7 +75,7 @@ func tcpMessagePump(wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()
 
-		if len(activeMiruEnv.tcpListenAddress) == 0 {
+		if activeMiruEnv.tcpListenAddress == "" {
 			log.Printf("Not listening for for tcp traffic")
 			return
 		}
@@ -84,7 +84,7 @@ func tcpMessagePump(wg *sync.WaitGroup) {
 
 		l, err := net.Listen("tcp", activeMiruEnv.tcpListenAddress)
 		if err != nil {
-			log.Print(err)
+			log.Printf("Error listening on tcp %s: %s", activeMiruEnv.tcpListenAddress, err)
 			return
 		}
 		defer l.Close()
@@ -93,7 +93,7 @@ func tcpMessagePump(wg *sync.WaitGroup) {
 			log.Printf("Accept connections")
 			c, err := l.Accept()
 			if err != nil {
-				log.Print(err)
+				log.Printf("Error accepting connection: %s", err)
 				return
 			}
 
@@ -168,7 +168,7 @@ func initS3() {
 	log.Print("Initialize AWS S3")
 
 	if err := lib.InitS3(activeMiruEnv.awsInfo); err != nil {
-		log.Printf("Error initializing S3 (bucket) %s", err)
+		log.Printf("Error initializing S3 (bucket): %s", err)
 	}
 }
 

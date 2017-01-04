@@ -58,11 +58,11 @@ func doPost(u string, bb *bytes.Buffer) error {
 
 // Post sends log events to stumptown
 func (l *LogEvents) Post(a, u string, delaySuccess, delayError time.Duration) error {
-	if len(a) == 0 {
+	if a == "" {
 		log.Print("Stumptown address is empty.")
 		return nil
 	}
-	if len(u) == 0 {
+	if u == "" {
 		log.Print("Stumptown intake url is empty.")
 		return nil
 	}

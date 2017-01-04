@@ -26,7 +26,7 @@ func (p JournalJSONMako) Extract(hn string, bb *bytes.Buffer) (res map[string]st
 		return
 	}
 
-	if len(p.journalJSON.HostName) == 0 {
+	if p.journalJSON.HostName == "" {
 		return nil, fmt.Errorf("Host name not found")
 	}
 
@@ -44,7 +44,7 @@ func (p JournalJSONMako) Extract(hn string, bb *bytes.Buffer) (res map[string]st
 	}
 
 	timestamp := p.journalJSON.SourceRealtimeTimestamp
-	if len(timestamp) == 0 {
+	if timestamp == "" {
 		timestamp = p.journalJSON.RealtimeTimestamp
 	}
 	if len(timestamp) == 16 {

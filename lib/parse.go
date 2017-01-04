@@ -42,7 +42,7 @@ func init() {
 			log.Printf("pretag %s:%s", v.Name, v.Type)
 		}
 	} else {
-		log.Print("Error reading pretag.json.", err)
+		log.Printf("Error reading pretag.json: %s", err)
 	}
 }
 
@@ -81,7 +81,7 @@ func (p *Packet) determineParser() (fields map[string]string, err error) {
 
 // Mill determines message type and parses into a LogEvent
 func (p *Packet) Mill() (res *LogEvent, err error) {
-	if len(p.Address) == 0 {
+	if p.Address == "" {
 		return nil, fmt.Errorf("Address is empty")
 	}
 	if len(p.Message) == 0 {

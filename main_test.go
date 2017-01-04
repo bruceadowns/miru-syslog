@@ -9,7 +9,7 @@ import (
 
 func TestTcpClient(t *testing.T) {
 	dockerAddr := os.Getenv("MIRU_SYSLOG_TCP_ADDR_PORT")
-	if len(dockerAddr) == 0 {
+	if dockerAddr == "" {
 		t.Skip("MIRU_SYSLOG_TCP_ADDR_PORT not found.")
 	}
 
@@ -35,7 +35,7 @@ func handleConnection(c net.Conn) {
 
 func TestTcpServer(t *testing.T) {
 	dockerAddr := os.Getenv("MIRU_SYSLOG_TCP_ADDR_PORT_SERVER")
-	if len(dockerAddr) == 0 {
+	if dockerAddr == "" {
 		t.Skip("MIRU_SYSLOG_TCP_ADDR_PORT_SERVER not found.")
 	}
 

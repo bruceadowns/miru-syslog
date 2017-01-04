@@ -90,7 +90,7 @@ func MiruPostChan(size int, addr, url string, delaySuccess, delayError time.Dura
 				log.Printf("Send %d events to stumptown [%d - %d]", len(logEvents), t, tl)
 				if len(logEvents) > 0 {
 					if err := logEvents.Post(addr, url, delaySuccess, delayError); err != nil {
-						log.Print(err)
+						log.Printf("Error posting to miru: %s", err)
 					}
 				}
 			}
@@ -156,7 +156,10 @@ func S3PostChan(size int, a AWSInfo, delaySuccess, delayError time.Duration) (ch
 				t++
 				tl += bb.Len()
 				log.Printf("Send %d bytes to S3. [%d - %d]", bb.Len(), t, tl)
-				PostS3(bb, a, delaySuccess, delayError)
+
+				if err := PostS3(bb, a, delaySuccess, delayError); err != nil {
+					log.Printf("Error posting buffer to S3: %s", err)
+				}
 			}
 		}
 	}()

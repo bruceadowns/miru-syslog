@@ -11,7 +11,7 @@ func GetEnvStr(name, def string) (res string) {
 	res = def
 
 	s := os.Getenv(name)
-	if len(s) == 0 {
+	if s == "" {
 		log.Printf("%s not present in environment.", name)
 	} else {
 		res = s
@@ -26,7 +26,7 @@ func GetEnvInt(name string, def int) (res int) {
 	res = def
 
 	s := os.Getenv(name)
-	if len(s) == 0 {
+	if s == "" {
 		log.Printf("%s not present in environment.", name)
 	} else {
 		i, err := strconv.Atoi(s)
