@@ -155,7 +155,7 @@ func S3PostChan(size int, a AWSInfo, delaySuccess, delayError time.Duration) (ch
 			case bb := <-ch:
 				t++
 				tl += bb.Len()
-				log.Printf("Send %d bytes to S3. [%d - %d]", bb.Len(), t, tl)
+				log.Printf("Send %d bytes to S3 [%d - %d]", bb.Len(), t, tl)
 
 				if err := PostS3(bb, a, delaySuccess, delayError); err != nil {
 					log.Printf("Error posting buffer to S3: %s", err)

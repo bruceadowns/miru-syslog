@@ -12,12 +12,12 @@ func GetEnvStr(name, def string) (res string) {
 
 	s := os.Getenv(name)
 	if s == "" {
-		log.Printf("%s not present in environment.", name)
+		log.Printf("%s not present in environment", name)
 	} else {
 		res = s
 	}
 
-	log.Printf("%s set to %s.", name, res)
+	log.Printf("%s set to %s", name, res)
 	return
 }
 
@@ -27,17 +27,17 @@ func GetEnvInt(name string, def int) (res int) {
 
 	s := os.Getenv(name)
 	if s == "" {
-		log.Printf("%s not present in environment.", name)
+		log.Printf("%s not present in environment", name)
 	} else {
 		i, err := strconv.Atoi(s)
 		if err == nil {
 			res = i
 		} else {
-			log.Printf("%s not numeric %s.", name, s)
+			log.Printf("%s not numeric %s", name, s)
 		}
 	}
 
-	log.Printf("%s set to %d.", name, res)
+	log.Printf("%s set to %d", name, res)
 	return
 }
 

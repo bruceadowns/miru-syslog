@@ -61,15 +61,15 @@ func doPost(u string, r io.Reader) error {
 // Post sends log events to stumptown
 func (l *LogEvents) Post(a, u string, delaySuccess, delayError time.Duration) error {
 	if a == "" {
-		log.Print("Stumptown address is empty.")
+		log.Print("Stumptown address is empty")
 		return nil
 	}
 	if u == "" {
-		log.Print("Stumptown intake url is empty.")
+		log.Print("Stumptown intake url is empty")
 		return nil
 	}
 
-	log.Printf("Send %d log events to stumptown.", len(*l))
+	log.Printf("Send %d log events to stumptown", len(*l))
 	buf := &bytes.Buffer{}
 	if err := json.NewEncoder(buf).Encode(l); err != nil {
 		return err
