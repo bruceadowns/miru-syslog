@@ -54,7 +54,7 @@ func MiruAccumChan(size int, batchSize int, delay time.Duration, postChan chan L
 			select {
 			case <-time.After(delay):
 				if len(logEvents) > 0 {
-					log.Printf("Post miru log events: %d (delay: %d)", len(logEvents), delay)
+					log.Printf("Post miru log events: %d (delay: %dms)", len(logEvents), delay)
 					postChan <- logEvents
 					logEvents = make(LogEvents, 0)
 				}
@@ -77,7 +77,7 @@ func MiruAccumChan(size int, batchSize int, delay time.Duration, postChan chan L
 }
 
 // MiruPostChan creates and returns a buffered channel used to post events to stumptown
-func MiruPostChan(size int, addr, url string) (ch chan LogEvents) {
+func MiruPostChan(size int, addr, url string, delaySuccess, delayError time.Duration) (ch chan LogEvents) {
 	ch = make(chan LogEvents, size)
 
 	go func() {
@@ -89,7 +89,7 @@ func MiruPostChan(size int, addr, url string) (ch chan LogEvents) {
 				tl += len(logEvents)
 				log.Printf("Send %d events to stumptown [%d - %d]", len(logEvents), t, tl)
 				if len(logEvents) > 0 {
-					if err := logEvents.Post(addr, url); err != nil {
+					if err := logEvents.Post(addr, url, delaySuccess, delayError); err != nil {
 						log.Print(err)
 					}
 				}
@@ -115,7 +115,7 @@ func S3AccumChan(size, batchBytes int, delay time.Duration, s3PostChan chan byte
 				if bb.Len() > 0 {
 					gw.Close()
 
-					log.Printf("Post %d bytes to S3 (delay: %d)", bb.Len(), delay)
+					log.Printf("Post %d bytes to S3 (delay: %dms)", bb.Len(), delay)
 					s3PostChan <- bb
 
 					bb = bytes.Buffer{}
@@ -145,7 +145,7 @@ func S3AccumChan(size, batchBytes int, delay time.Duration, s3PostChan chan byte
 }
 
 // S3PostChan ...
-func S3PostChan(size int, a AWSInfo) (ch chan bytes.Buffer) {
+func S3PostChan(size int, a AWSInfo, delaySuccess, delayError time.Duration) (ch chan bytes.Buffer) {
 	ch = make(chan bytes.Buffer, size)
 
 	go func() {
@@ -156,7 +156,7 @@ func S3PostChan(size int, a AWSInfo) (ch chan bytes.Buffer) {
 				t++
 				tl += bb.Len()
 				log.Printf("Send %d bytes to S3. [%d - %d]", bb.Len(), t, tl)
-				PostS3(bb, a)
+				PostS3(bb, a, delaySuccess, delayError)
 			}
 		}
 	}()

@@ -16,16 +16,22 @@ type miruEnv struct {
 	stumptownAddress       string
 	miruStumptownIntakeURL string
 
-	channelBufferSizeParse        int
-	channelBufferSizeMiruAccum    int
-	channelBufferSizeMiruPost     int
-	channelBufferMiruAccumBatch   int
-	channelBufferMiruAccumDelayMs int
+	channelBufferSizeParse     int
+	channelBufferSizeMiruAccum int
+	channelBufferSizeMiruPost  int
 
-	channelBufferS3AccumBatchBytes int
-	channelBufferS3AccumDelayMs    int
-	channelBufferSizeS3Accum       int
-	channelBufferSizeS3Post        int
+	channelBufferSizeS3Accum int
+	channelBufferSizeS3Post  int
+
+	channelBufferMiruAccumBatch       int
+	channelBufferMiruAccumDelayMs     int
+	channelBufferMiruDelayOnSuccessMs int
+	channelBufferMiruDelayOnErrorMs   int
+
+	channelBufferS3AccumBatchBytes  int
+	channelBufferS3AccumDelayMs     int
+	channelBufferS3DelayOnSuccessMs int
+	channelBufferS3DelayOnErrorMs   int
 
 	awsInfo lib.AWSInfo
 }
@@ -104,13 +110,19 @@ func init() {
 	activeMiruEnv.channelBufferSizeParse = lib.GetEnvInt("CHANNEL_BUFFER_SIZE_PARSE", 1024)
 	activeMiruEnv.channelBufferSizeMiruAccum = lib.GetEnvInt("CHANNEL_BUFFER_SIZE_MIRU_ACCUM", 1024)
 	activeMiruEnv.channelBufferSizeMiruPost = lib.GetEnvInt("CHANNEL_BUFFER_SIZE_MIRU_POST", 1024)
-	activeMiruEnv.channelBufferMiruAccumBatch = lib.GetEnvInt("CHANNEL_BUFFER_MIRU_ACCUM_BATCH", 1024)
-	activeMiruEnv.channelBufferMiruAccumDelayMs = lib.GetEnvInt("CHANNEL_BUFFER_MIRU_ACCUM_DELAY_MS", 1000)
 
 	activeMiruEnv.channelBufferSizeS3Accum = lib.GetEnvInt("CHANNEL_BUFFER_SIZE_S3_ACCUM", 1024)
 	activeMiruEnv.channelBufferSizeS3Post = lib.GetEnvInt("CHANNEL_BUFFER_SIZE_S3_POST", 1024)
+
+	activeMiruEnv.channelBufferMiruAccumBatch = lib.GetEnvInt("CHANNEL_BUFFER_MIRU_ACCUM_BATCH", 1024)
+	activeMiruEnv.channelBufferMiruAccumDelayMs = lib.GetEnvInt("CHANNEL_BUFFER_MIRU_ACCUM_DELAY_MS", 1000)
+	activeMiruEnv.channelBufferMiruDelayOnSuccessMs = lib.GetEnvInt("CHANNEL_BUFFER_MIRU_DELAY_ON_SUCCESS_MS", 500)
+	activeMiruEnv.channelBufferMiruDelayOnErrorMs = lib.GetEnvInt("CHANNEL_BUFFER_MIRU_DELAY_ON_ERROR_MS", 5000)
+
 	activeMiruEnv.channelBufferS3AccumBatchBytes = lib.GetEnvInt("CHANNEL_BUFFER_S3_ACCUM_BATCH_BYTES", 10*1024*1024)
 	activeMiruEnv.channelBufferS3AccumDelayMs = lib.GetEnvInt("CHANNEL_BUFFER_S3_ACCUM_DELAY_MS", 8*60*60*1000*100)
+	activeMiruEnv.channelBufferS3DelayOnSuccessMs = lib.GetEnvInt("CHANNEL_BUFFER_S3_DELAY_ON_SUCCESS_MS", 1000)
+	activeMiruEnv.channelBufferS3DelayOnErrorMs = lib.GetEnvInt("CHANNEL_BUFFER_S3_DELAY_ON_ERROR_MS", 5000)
 
 	activeMiruEnv.awsInfo = lib.AWSInfo{
 		AwsRegion:          lib.GetEnvStr("AWS_REGION", "us-west-2"),
@@ -125,7 +137,9 @@ func initChannels() {
 	sb.MiruPostChan = lib.MiruPostChan(
 		activeMiruEnv.channelBufferSizeMiruPost,
 		activeMiruEnv.stumptownAddress,
-		activeMiruEnv.miruStumptownIntakeURL)
+		activeMiruEnv.miruStumptownIntakeURL,
+		time.Millisecond*time.Duration(activeMiruEnv.channelBufferMiruDelayOnSuccessMs),
+		time.Millisecond*time.Duration(activeMiruEnv.channelBufferMiruDelayOnErrorMs))
 
 	sb.MiruAccumChan = lib.MiruAccumChan(
 		activeMiruEnv.channelBufferSizeMiruAccum,
@@ -139,7 +153,9 @@ func initChannels() {
 
 	sb.S3PostChan = lib.S3PostChan(
 		activeMiruEnv.channelBufferSizeS3Post,
-		activeMiruEnv.awsInfo)
+		activeMiruEnv.awsInfo,
+		time.Millisecond*time.Duration(activeMiruEnv.channelBufferS3DelayOnSuccessMs),
+		time.Millisecond*time.Duration(activeMiruEnv.channelBufferS3DelayOnErrorMs))
 
 	sb.S3AccumChan = lib.S3AccumChan(
 		activeMiruEnv.channelBufferSizeS3Accum,

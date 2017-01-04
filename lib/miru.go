@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 )
 
 // LogEvent holds the stumptown event
@@ -34,8 +35,29 @@ func (l *LogEvent) String() string {
 // LogEvents ...
 type LogEvents []LogEvent
 
+// helper post function to facilitate retry
+func doPost(u string, bb *bytes.Buffer) error {
+	resp, err := http.DefaultClient.Post(u, "application/json", bb)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusAccepted {
+		return fmt.Errorf("Invalid status code [%d] posting to %s", resp.StatusCode, u)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal("Unexpected error reading accepted post", err)
+	}
+
+	log.Printf("Response: %d '%s'", resp.StatusCode, body)
+	return nil
+}
+
 // Post sends log events to stumptown
-func (l *LogEvents) Post(a, u string) error {
+func (l *LogEvents) Post(a, u string, delaySuccess, delayError time.Duration) error {
 	if len(a) == 0 {
 		log.Print("Stumptown address is empty.")
 		return nil
@@ -55,17 +77,24 @@ func (l *LogEvents) Post(a, u string) error {
 	url := fmt.Sprintf("http://%s%s", a, u)
 	log.Print(url)
 
-	resp, err := http.DefaultClient.Post(url, "application/json", buf)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
+	for {
+		err := doPost(url, buf)
+		if err == nil {
+			if delaySuccess > 0 {
+				log.Printf("Miru delay on success %dms", delaySuccess)
+				time.Sleep(delaySuccess)
+			}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
+			break
+		}
+
+		log.Printf("Error posting to %s: %s", url, err)
+
+		if delayError > 0 {
+			log.Printf("Miru delay on error %dms", delayError)
+			time.Sleep(delayError)
+		}
 	}
 
-	log.Printf("Response: %d '%s'\n", resp.StatusCode, body)
 	return nil
 }

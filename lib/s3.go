@@ -71,7 +71,7 @@ func InitS3(a AWSInfo) error {
 }
 
 // PostS3 ...
-func PostS3(bb bytes.Buffer, a AWSInfo) error {
+func PostS3(bb bytes.Buffer, a AWSInfo, delaySuccess, delayError time.Duration) error {
 	if awsSession == nil {
 		return fmt.Errorf("AWS S3 Session is empty")
 	}
@@ -79,23 +79,37 @@ func PostS3(bb bytes.Buffer, a AWSInfo) error {
 		return fmt.Errorf("AWS S3 buffer is empty")
 	}
 
-	uploader := s3manager.NewUploader(awsSession)
-	awsKey := aws.String(time.Now().Format(time.RFC3339Nano) + ".gz")
-	log.Printf("AWS S3 key: %s", *awsKey)
+	awsKey := time.Now().Format(time.RFC3339Nano) + ".gz"
+	log.Printf("AWS S3 key: %s", awsKey)
+	s3Uploader := s3manager.NewUploader(awsSession)
 
-	result, err := uploader.Upload(&s3manager.UploadInput{
-		Body:   bytes.NewReader(bb.Bytes()),
-		Bucket: aws.String(a.S3Bucket),
-		Key:    awsKey,
-	})
-	if err != nil {
-		return fmt.Errorf("Error posting to S3 %s", err)
-	}
+	for {
+		result, err := s3Uploader.Upload(&s3manager.UploadInput{
+			Body:   bytes.NewReader(bb.Bytes()),
+			Bucket: aws.String(a.S3Bucket),
+			Key:    aws.String(awsKey),
+		})
+		if err == nil {
+			if result == nil {
+				log.Fatal("Nil S3 result")
+			}
 
-	if result == nil {
-		log.Fatal("Nil S3 result")
+			if delaySuccess > 0 {
+				log.Printf("S3 delay on success %dms", delaySuccess)
+				time.Sleep(delaySuccess)
+			}
+
+			log.Printf("S3 Location: %s", result.Location)
+			break
+		}
+
+		log.Print("Error posting to S3", err)
+
+		if delayError > 0 {
+			log.Printf("S3 delay on error %dms", delayError)
+			time.Sleep(delayError)
+		}
 	}
-	log.Printf("S3 Location: %s", result.Location)
 
 	return nil
 }
