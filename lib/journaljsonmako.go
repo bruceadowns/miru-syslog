@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 )
 
 // JournalJSONMako struct
@@ -21,18 +20,8 @@ func (p JournalJSONMako) Name() string {
 
 // Extract ...
 func (p JournalJSONMako) Extract(hn string, bb *bytes.Buffer) (res map[string]string, err error) {
-	replacer := strings.NewReplacer(
-		"\"level\":10,", "\"level\":\"TRACE\",",
-		"\"level\":20,", "\"level\":\"DEBUG\",",
-		"\"level\":30,", "\"level\":\"INFO\",",
-		"\"level\":40,", "\"level\":\"WARN\",",
-		"\"level\":50,", "\"level\":\"ERROR\",",
-		"\"level\":60,", "\"level\":\"ERROR\",",
-		"\"@timestamp\"", "\"timestamp\"",
-		"\"@version\"", "\"version\"")
-
-	jj := replacer.Replace(bb.String())
-	jj = reVersionStrung.ReplaceAllString(jj, "\"version\":0")
+	jj := makoReplacer.Replace(bb.String())
+	jj = makoVersionRegex.ReplaceAllString(jj, "\"version\":0")
 	if err = json.NewDecoder(bytes.NewBufferString(jj)).Decode(&p.journalJSON); err != nil {
 		return
 	}
@@ -73,8 +62,8 @@ func (p JournalJSONMako) Extract(hn string, bb *bytes.Buffer) (res map[string]st
 	threadName := ""
 	version := ""
 
-	mj := replacer.Replace(p.journalJSON.Message)
-	mj = reVersionStrung.ReplaceAllString(mj, "\"version\":0")
+	mj := makoReplacer.Replace(p.journalJSON.Message)
+	mj = makoVersionRegex.ReplaceAllString(mj, "\"version\":0")
 	if err := json.NewDecoder(bytes.NewBufferString(mj)).Decode(&p.makoJSON); err == nil {
 		loggerName = p.makoJSON.LoggerName
 		level = p.makoJSON.Level

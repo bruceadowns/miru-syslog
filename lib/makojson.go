@@ -25,8 +25,16 @@ type MakoJSON struct {
 	StackTrace         string `json:"stack_trace,omitempty"`
 }
 
-// global const in order to compile once
-var reVersionStrung = regexp.MustCompile("\"version\":\"[0-9.]+\"")
+var makoReplacer = strings.NewReplacer(
+	"\"level\":10,", "\"level\":\"TRACE\",",
+	"\"level\":20,", "\"level\":\"DEBUG\",",
+	"\"level\":30,", "\"level\":\"INFO\",",
+	"\"level\":40,", "\"level\":\"WARN\",",
+	"\"level\":50,", "\"level\":\"ERROR\",",
+	"\"level\":60,", "\"level\":\"ERROR\",",
+	"\"@timestamp\"", "\"timestamp\"",
+	"\"@version\"", "\"version\"")
+var makoVersionRegex = regexp.MustCompile("\"version\":\"[0-9.]+\"")
 
 // Name ...
 func (p MakoJSON) Name() string {
@@ -35,18 +43,8 @@ func (p MakoJSON) Name() string {
 
 // Extract ...
 func (p MakoJSON) Extract(hostname string, bb *bytes.Buffer) (res map[string]string, err error) {
-	replacer := strings.NewReplacer(
-		"\"level\":10,", "\"level\":\"TRACE\",",
-		"\"level\":20,", "\"level\":\"DEBUG\",",
-		"\"level\":30,", "\"level\":\"INFO\",",
-		"\"level\":40,", "\"level\":\"WARN\",",
-		"\"level\":50,", "\"level\":\"ERROR\",",
-		"\"level\":60,", "\"level\":\"ERROR\",",
-		"\"@timestamp\"", "\"timestamp\"",
-		"\"@version\"", "\"version\"")
-
-	out := replacer.Replace(bb.String())
-	out = reVersionStrung.ReplaceAllString(out, "\"version\":0")
+	out := makoReplacer.Replace(bb.String())
+	out = makoVersionRegex.ReplaceAllString(out, "\"version\":0")
 
 	err = json.NewDecoder(bytes.NewBufferString(out)).Decode(&p)
 	if err != nil {
