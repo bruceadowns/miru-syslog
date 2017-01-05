@@ -1,14 +1,23 @@
 # miru-syslog
 
-Syslog collector that listens for syslog traffic, parses, and forwards to miru-stumptown.
+Syslog collector that listens for syslog traffic, parses, forwards to miru-stumptown and aws s3.
 
-It is written in golang, housed in a docker container, deployed as a DaemonSet into a Kubernetes cluster.
+It is written in golang, housed in a docker container, and may be deployed as a DaemonSet into a Kubernetes cluster.
 
 ## Endpoints
 
 * tcp port 514
 
 ## Environment Variables
+
+### Minimal
+
+* MIRU_SYSLOG_TCP_ADDR_PORT - required to listen for traffic
+* MIRU_STUMPTOWN_ADDR_PORT - required if posting to stumptown
+* AWS_ACCESS_KEY_ID - required if posting to S3
+* AWS_SECRET_ACCESS_KEY - required if posting to S3
+
+### Full Listing
 
 * MIRU_SYSLOG_TCP_ADDR_PORT - required to listen for traffic
 * MIRU_STUMPTOWN_ADDR_PORT - required to post to stumptown
@@ -31,7 +40,27 @@ It is written in golang, housed in a docker container, deployed as a DaemonSet i
 * AWS_ACCESS_KEY_ID - required to post to S3
 * AWS_SECRET_ACCESS_KEY - required to post to S3
 
-## Test Notes
+## Execution Notes
+
+### Run via golang
+
+```
+go get github.com/bruceadowns/miru-syslog
+export MIRU_SYSLOG_TCP_ADDR_PORT=:8514
+export MIRU_STUMPTOWN_ADDR_PORT=10.126.5.155:10000
+go run main.go
+```
+
+or
+
+```
+go get github.com/bruceadowns/miru-syslog
+export MIRU_SYSLOG_TCP_ADDR_PORT=:8514
+export MIRU_STUMPTOWN_ADDR_PORT=10.126.5.155:10000
+export AWS_ACCESS_KEY_ID=<my ak id>
+export AWS_SECRET_ACCESS_KEY=<my secret ak>
+go run main.go
+```
 
 ### Run minikube
 
