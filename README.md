@@ -62,18 +62,20 @@ export AWS_SECRET_ACCESS_KEY=<my secret ak>
 go run main.go
 ```
 
-### Run minikube
+### Run via docker
+
+```
+make docker
+make run
+```
+
+### Run via minikube
 
 ```
 minikube start
 minikube ip
 kubectl cluster-info
-minikube stop
-```
 
-### Create kubernetes daemonset
-
-```
 kubectl create -f docker/k8s.yml
 
 kubectl get daemonset
@@ -81,19 +83,14 @@ kubectl get pods
 
 kubectl logs miru-syslog-xxxxx
 kubectl delete daemonset miru-syslog
+
+minikube stop
 ```
 
-### Run main.go via docker
+### Test tcp client via minikube
 
 ```
-make docker
-make run
-```
-
-### Test tcp client
-
-```
-export MIRU_STUMPTOWN_ADDR_PORT=10.126.5.155:10004
+export MIRU_STUMPTOWN_ADDR_PORT=10.126.5.155:10000
 export MIRU_SYSLOG_TCP_ADDR_PORT=`minikube ip`:514
 go test -v --run TestTcpClient
 ```
